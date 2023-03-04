@@ -3,10 +3,9 @@
 <p align="center">
   <img src="https://komarev.com/ghpvc/?username=queryk&label=Profile%20views&color=7d7d7d&style=plastic" alt="queryk" />
 </p>
-<h3 align="center">Connect with me:</h3>
-<p align="center"></p>
+
 <h3 align="center">Languages and Tools:</h3>
-<p align="left">
+<p align="center">
   <a href="https://angular.io" target="_blank" rel="noreferrer">
     <img src="https://angular.io/assets/images/logos/angular/angular.svg" alt="angular" width="40" height="40" />
   </a>
