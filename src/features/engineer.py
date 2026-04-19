@@ -144,8 +144,8 @@ class FeatureEngineer:
         bids = ob.get("bids", {})
         asks = ob.get("asks", {})
         if isinstance(bids, dict):
-            bid_vol = sum(bids.values())
-            ask_vol = sum(asks.values())
+            bid_vol = float(sum(bids.values()))
+            ask_vol = float(sum(asks.values()))
         else:
             bid_vol = ask_vol = 0.0
 
