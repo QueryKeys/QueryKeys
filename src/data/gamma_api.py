@@ -6,10 +6,17 @@ https://gamma-api.polymarket.com
 from __future__ import annotations
 
 import asyncio
+import ssl
 from datetime import datetime, timezone
 from typing import Any, Dict, List, Optional
 
 import aiohttp
+
+try:
+    import certifi
+    _SSL_CONTEXT = ssl.create_default_context(cafile=certifi.where())
+except ImportError:
+    _SSL_CONTEXT = None
 
 from src.core.config import Settings
 from src.core.exceptions import DataFetchError
@@ -38,10 +45,12 @@ class GammaAPIClient:
 
     async def init(self) -> None:
         timeout = aiohttp.ClientTimeout(total=30)
+        connector = aiohttp.TCPConnector(ssl=_SSL_CONTEXT) if _SSL_CONTEXT else None
         self._session = aiohttp.ClientSession(
             base_url=self._base,
             timeout=timeout,
             headers={"Accept": "application/json"},
+            connector=connector,
         )
 
     async def close(self) -> None:

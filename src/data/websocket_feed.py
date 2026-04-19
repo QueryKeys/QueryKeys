@@ -15,12 +15,19 @@ from __future__ import annotations
 
 import asyncio
 import json
+import ssl
 import time
 from collections import defaultdict
 from typing import Any, Callable, Dict, List, Optional, Set
 
 import websockets
 from websockets.exceptions import ConnectionClosed, WebSocketException
+
+try:
+    import certifi
+    _SSL_CONTEXT = ssl.create_default_context(cafile=certifi.where())
+except ImportError:
+    _SSL_CONTEXT = None
 
 from src.core.config import Settings
 from src.core.logging import get_logger
@@ -164,6 +171,7 @@ class WebSocketFeed:
             ping_interval=self._ping_interval,
             ping_timeout=20,
             max_size=10 * 1024 * 1024,
+            ssl=_SSL_CONTEXT,
         ) as ws:
             self._ws = ws
             self._reconnect_count = 0

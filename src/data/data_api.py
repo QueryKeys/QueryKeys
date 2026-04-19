@@ -9,9 +9,16 @@ positions, user activity.
 from __future__ import annotations
 
 import asyncio
+import ssl
 from typing import Any, Dict, List, Optional
 
 import aiohttp
+
+try:
+    import certifi
+    _SSL_CONTEXT = ssl.create_default_context(cafile=certifi.where())
+except ImportError:
+    _SSL_CONTEXT = None
 
 from src.core.config import Settings
 from src.core.exceptions import DataFetchError
@@ -36,10 +43,12 @@ class DataAPIClient:
         await self.close()
 
     async def init(self) -> None:
+        connector = aiohttp.TCPConnector(ssl=_SSL_CONTEXT) if _SSL_CONTEXT else None
         self._session = aiohttp.ClientSession(
             base_url=self._base,
             timeout=aiohttp.ClientTimeout(total=30),
             headers={"Accept": "application/json"},
+            connector=connector,
         )
 
     async def close(self) -> None:
