@@ -111,6 +111,21 @@ dashboard:
   alert_email: ""
   alert_webhook: ""               # Slack/Discord webhook
 
+# ---- AI Strategy Builder -----------------------------------
+ai_builder:
+  enabled: true
+  # Run automatically every N hours while the bot is live (0 = manual only)
+  auto_generate_interval_hours: 24
+  # Minimum trades required before auto-generation triggers
+  min_trades_for_generation: 20
+  # Model used for strategy generation (can be different from prediction LLM)
+  model: "claude-opus-4-7"
+  max_tokens: 2048
+  # Auto-enable generated strategies in strategies.yaml
+  auto_enable: true
+  # Directory where generated strategy files are saved
+  output_dir: "src/strategies/generated"
+
 # ---- Rate Limits -------------------------------------------
 rate_limits:
   gamma_api_rps: 10

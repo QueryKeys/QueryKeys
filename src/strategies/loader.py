@@ -9,7 +9,7 @@ from __future__ import annotations
 
 import importlib
 from pathlib import Path
-from typing import Dict, List
+from typing import Any, Dict, List, Optional, Union
 
 import yaml
 
@@ -77,6 +77,3 @@ class StrategyRegistry:
                 if override is not None:
                     overrides.append(override)
         return min(overrides) if overrides else None
-
-
-from typing import Dict

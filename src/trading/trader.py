@@ -16,11 +16,14 @@ from __future__ import annotations
 
 import asyncio
 import time
+from collections import defaultdict
 from datetime import datetime, timezone
 from typing import Any, Dict, List, Optional, Set
 
+import numpy as np
+
 from src.core.config import Settings
-from src.core.database import DatabaseManager, Order, Position, PortfolioSnapshot
+from src.core.database import DatabaseManager, Order, Position, PortfolioSnapshot, Prediction as DbPrediction
 from src.core.exceptions import CircuitBreakerOpen, RiskLimitExceeded
 from src.core.logging import get_logger
 from src.data.data_api import DataAPIClient
@@ -156,11 +159,19 @@ class Trader:
                 if cid not in self._active_markets:
                     new_markets += 1
                     # Subscribe to WS for YES token
-                    tokens = market.get("clobTokenIds", [])
+                    raw_tokens = market.get("clobTokenIds", [])
+                    # Gamma API sometimes returns a JSON string instead of a list
+                    if isinstance(raw_tokens, str):
+                        import json as _json
+                        try:
+                            raw_tokens = _json.loads(raw_tokens)
+                        except Exception:
+                            raw_tokens = []
+                    tokens = [t for t in (raw_tokens or [])
+                              if isinstance(t, str) and t.startswith("0x") and len(t) > 10]
                     for tok in tokens:
-                        if tok:
-                            await self._ws.subscribe_live(tok)
-                            self._market_tokens.setdefault(cid, []).append(tok)
+                        await self._ws.subscribe_live(tok)
+                        self._market_tokens.setdefault(cid, []).append(tok)
                 self._active_markets[cid] = market
 
             log.info("trader.scan_complete", total=len(markets), new=new_markets)
@@ -197,7 +208,7 @@ class Trader:
         try:
             tokens = self._market_tokens.get(condition_id, [])
             yes_token = tokens[0] if tokens else None
-            if not yes_token:
+            if not yes_token or not yes_token.startswith("0x") or len(yes_token) < 10:
                 return
 
             # Fetch current data
@@ -228,7 +239,6 @@ class Trader:
                 sentiment_confidence=sentiment.confidence,
             )
             feature_names, feature_values = self._feature_eng.to_vector(features)
-            import numpy as np
             feature_vector = np.array(feature_values, dtype=np.float32)
 
             # Ensemble prediction
@@ -420,7 +430,6 @@ class Trader:
     # ------------------------------------------------------------------
 
     async def _save_prediction(self, condition_id: str, prediction: Any, market_price: float) -> None:
-        from src.core.database import Prediction as DbPrediction
         try:
             async with self._db.session() as sess:
                 pred = DbPrediction(
@@ -438,7 +447,6 @@ class Trader:
             log.debug("trader.save_prediction_error", error=str(exc))
 
     async def _save_order(self, order: Any, signal: EdgeSignal) -> None:
-        from src.core.database import Order as DbOrder
         try:
             async with self._db.session() as sess:
                 db_order = DbOrder(

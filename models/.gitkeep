@@ -1,0 +1,2 @@
+# This file keeps the models/ directory in git.
+# Trained model files (*.pkl, *.bin) are gitignored — run train_models.py to generate them.

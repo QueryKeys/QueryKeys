@@ -20,13 +20,13 @@ from __future__ import annotations
 
 import asyncio
 import json
+from collections import defaultdict
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Tuple
 
 import numpy as np
-import pandas as pd
 
 from src.backtesting.metrics import BacktestMetrics, compute_metrics
 from src.backtesting.simulator import MonteCarloResult, MonteCarloSimulator
@@ -239,7 +239,6 @@ class Backtester:
         positions: Dict[str, Dict] = {}
 
         # Group by condition_id → sorted snapshots
-        from collections import defaultdict
         market_snaps: Dict[str, List[Dict]] = defaultdict(list)
         for row in test_data:
             market_snaps[row["condition_id"]].append(row)
