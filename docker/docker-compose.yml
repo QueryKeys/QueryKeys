@@ -1,0 +1,70 @@
+version: "3.9"
+
+services:
+  bot:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile
+    container_name: querykeys_bot
+    restart: unless-stopped
+    env_file:
+      - ../.env
+    volumes:
+      - ../data:/app/data
+      - ../models:/app/models
+      - ../config:/app/config
+      - ../logs:/app/logs
+    environment:
+      - PYTHONPATH=/app
+      - BOT_MODE=${BOT_MODE:-paper}
+    networks:
+      - querykeys_net
+    depends_on:
+      - postgres
+    command: python scripts/run_bot.py --mode ${BOT_MODE:-paper}
+
+  dashboard:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile
+    container_name: querykeys_dashboard
+    restart: unless-stopped
+    env_file:
+      - ../.env
+    volumes:
+      - ../data:/app/data
+      - ../config:/app/config
+    environment:
+      - PYTHONPATH=/app
+    ports:
+      - "8501:8501"
+    networks:
+      - querykeys_net
+    command: python scripts/run_dashboard.py
+
+  postgres:
+    image: postgres:16-alpine
+    container_name: querykeys_postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: querykeys
+      POSTGRES_USER: querykeys
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-changeme_in_production}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    networks:
+      - querykeys_net
+
+  # Optional: Prometheus metrics exporter
+  # prometheus:
+  #   image: prom/prometheus:latest
+  #   ...
+
+volumes:
+  postgres_data:
+
+networks:
+  querykeys_net:
+    driver: bridge
