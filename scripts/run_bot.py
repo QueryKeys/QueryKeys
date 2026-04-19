@@ -16,9 +16,13 @@ import asyncio
 import os
 import signal
 import sys
+from pathlib import Path
 
-# Add project root to path
-sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+# Ensure project root (the directory containing src/) is on sys.path,
+# regardless of the working directory the script is launched from.
+_PROJECT_ROOT = Path(__file__).resolve().parent.parent
+if str(_PROJECT_ROOT) not in sys.path:
+    sys.path.insert(0, str(_PROJECT_ROOT))
 
 from src.core.config import get_settings
 from src.core.database import DatabaseManager

@@ -16,10 +16,10 @@ build/
 .eggs/
 *.egg
 
-# Data & Models (large files)
-data/
-models/
-logs/
+# Data & Models (large runtime files — root-level only)
+/data/
+/models/
+/logs/
 *.db
 *.sqlite3
 *.sqlite
