@@ -5,8 +5,7 @@ setup(
     name="querykeys",
     version="1.0.0",
     description="Elite Polymarket Prediction & Automated Trading Bot",
-    packages=find_packages(where="src"),
-    package_dir={"": "src"},
+    packages=find_packages(),
     python_requires=">=3.11",
     install_requires=[
         "py-clob-client>=0.17.0",
