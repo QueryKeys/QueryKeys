@@ -159,6 +159,28 @@ except Exception as e:
     fail("TraderImport", e)
     traceback.print_exc()
 
+# AI Strategy Builder
+try:
+    from src.strategies.ai_builder import AIStrategyBuilder, MarketContext
+    import numpy as np
+    trades_sample = [
+        {"pnl": float(np.random.normal(30, 80)), "edge": 0.05, "category": "Politics",
+         "confidence": 0.6, "uncertainty": 0.12}
+        for _ in range(25)
+    ]
+    ctx = AIStrategyBuilder._derive_context(
+        trades=trades_sample,
+        active_markets=40,
+        existing_strategy_names=["ensemble_edge", "arbitrage"],
+    )
+    assert ctx.total_active_markets == 40
+    assert 0 <= ctx.overall_win_rate <= 1
+    assert ctx.volatility_regime in ("low", "medium", "high")
+    ok("AIBuilder", f"regime={ctx.volatility_regime}  win_rate={ctx.overall_win_rate:.1%}  cats={len(ctx.category_stats)}")
+except Exception as e:
+    fail("AIBuilder", e)
+    traceback.print_exc()
+
 # Dashboard file exists
 try:
     import importlib.util
