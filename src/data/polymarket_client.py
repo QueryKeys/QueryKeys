@@ -314,6 +314,8 @@ class PolymarketClient:
         return await self._call("cancel_all")
 
     async def get_open_orders(self, condition_id: Optional[str] = None) -> List[Dict]:
+        if self._mode != "live":
+            return []
         params = OpenOrderParams(market=condition_id)
         result = await self._call("get_orders", params)
         return result if isinstance(result, list) else []
@@ -324,10 +326,14 @@ class PolymarketClient:
 
     async def get_balance(self) -> float:
         """Return USDC balance on Polygon."""
+        if self._mode != "live":
+            return 0.0
         result = await self._call("get_balance_allowance")
         balance = result.get("balance", {})
         return float(balance.get("USDC", 0))
 
     async def get_positions(self) -> List[Dict]:
+        if self._mode != "live":
+            return []
         result = await self._call("get_positions")
         return result if isinstance(result, list) else []
