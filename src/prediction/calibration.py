@@ -16,7 +16,7 @@ import math
 import pickle
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Dict, List, Optional, Tuple
+from typing import Any, Dict, List, Optional, Tuple
 
 import numpy as np
 
@@ -185,7 +185,3 @@ class ProbabilityCalibrator:
             with open(path, "rb") as f:
                 self._calibrators[model_name] = pickle.load(f)
             log.info("calibration.loaded", model=model_name)
-
-
-# Allow type checking with Any
-from typing import Any

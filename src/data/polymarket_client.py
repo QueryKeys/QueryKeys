@@ -18,20 +18,26 @@ from contextlib import asynccontextmanager
 from decimal import Decimal
 from typing import Any, Dict, List, Optional, Tuple
 
-from py_clob_client.client import ClobClient
-from py_clob_client.clob_types import (
-    ApiCreds,
-    BookParams,
-    MarketOrderArgs,
-    OpenOrderParams,
-    OrderArgs,
-    OrderBookSummary,
-    OrderType,
-    PartialCreateOrderOptions,
-    TradeParams,
-)
-from py_clob_client.constants import POLYGON
-from py_clob_client.exceptions import PolyException
+try:
+    from py_clob_client.client import ClobClient
+    from py_clob_client.clob_types import (
+        ApiCreds,
+        BookParams,
+        MarketOrderArgs,
+        OpenOrderParams,
+        OrderArgs,
+        OrderBookSummary,
+        OrderType,
+        PartialCreateOrderOptions,
+        TradeParams,
+    )
+    from py_clob_client.constants import POLYGON
+    from py_clob_client.exceptions import PolyException
+except ImportError:  # library not installed in test/dev environments
+    ClobClient = None  # type: ignore[assignment,misc]
+    ApiCreds = BookParams = MarketOrderArgs = OpenOrderParams = None  # type: ignore[assignment,misc]
+    OrderArgs = OrderBookSummary = OrderType = PartialCreateOrderOptions = None  # type: ignore[assignment,misc]
+    TradeParams = POLYGON = PolyException = None  # type: ignore[assignment,misc]
 
 from src.core.config import Settings
 from src.core.exceptions import AuthenticationError, DataFetchError, OrderError

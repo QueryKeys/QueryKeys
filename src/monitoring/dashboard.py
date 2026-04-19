@@ -22,6 +22,7 @@ from datetime import datetime, timedelta
 from pathlib import Path
 from typing import Any, Dict, List, Optional
 
+import numpy as np
 import pandas as pd
 import plotly.express as px
 import plotly.graph_objects as go
@@ -178,7 +179,6 @@ def render_portfolio():
 
 def _demo_portfolio():
     """Show demo chart when no data exists."""
-    import numpy as np
     np.random.seed(42)
     dates = pd.date_range("2025-01-01", periods=100, freq="D")
     rets = np.random.normal(0.003, 0.02, 100)

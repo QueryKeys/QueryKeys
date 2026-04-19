@@ -16,11 +16,14 @@ from __future__ import annotations
 
 import asyncio
 import time
+from collections import defaultdict
 from datetime import datetime, timezone
 from typing import Any, Dict, List, Optional, Set
 
+import numpy as np
+
 from src.core.config import Settings
-from src.core.database import DatabaseManager, Order, Position, PortfolioSnapshot
+from src.core.database import DatabaseManager, Order, Position, PortfolioSnapshot, Prediction as DbPrediction
 from src.core.exceptions import CircuitBreakerOpen, RiskLimitExceeded
 from src.core.logging import get_logger
 from src.data.data_api import DataAPIClient
@@ -228,7 +231,6 @@ class Trader:
                 sentiment_confidence=sentiment.confidence,
             )
             feature_names, feature_values = self._feature_eng.to_vector(features)
-            import numpy as np
             feature_vector = np.array(feature_values, dtype=np.float32)
 
             # Ensemble prediction
@@ -420,7 +422,6 @@ class Trader:
     # ------------------------------------------------------------------
 
     async def _save_prediction(self, condition_id: str, prediction: Any, market_price: float) -> None:
-        from src.core.database import Prediction as DbPrediction
         try:
             async with self._db.session() as sess:
                 pred = DbPrediction(
@@ -438,7 +439,6 @@ class Trader:
             log.debug("trader.save_prediction_error", error=str(exc))
 
     async def _save_order(self, order: Any, signal: EdgeSignal) -> None:
-        from src.core.database import Order as DbOrder
         try:
             async with self._db.session() as sess:
                 db_order = DbOrder(
