@@ -159,11 +159,19 @@ class Trader:
                 if cid not in self._active_markets:
                     new_markets += 1
                     # Subscribe to WS for YES token
-                    tokens = market.get("clobTokenIds", [])
+                    raw_tokens = market.get("clobTokenIds", [])
+                    # Gamma API sometimes returns a JSON string instead of a list
+                    if isinstance(raw_tokens, str):
+                        import json as _json
+                        try:
+                            raw_tokens = _json.loads(raw_tokens)
+                        except Exception:
+                            raw_tokens = []
+                    tokens = [t for t in (raw_tokens or [])
+                              if isinstance(t, str) and t.startswith("0x") and len(t) > 10]
                     for tok in tokens:
-                        if tok:
-                            await self._ws.subscribe_live(tok)
-                            self._market_tokens.setdefault(cid, []).append(tok)
+                        await self._ws.subscribe_live(tok)
+                        self._market_tokens.setdefault(cid, []).append(tok)
                 self._active_markets[cid] = market
 
             log.info("trader.scan_complete", total=len(markets), new=new_markets)
@@ -200,7 +208,7 @@ class Trader:
         try:
             tokens = self._market_tokens.get(condition_id, [])
             yes_token = tokens[0] if tokens else None
-            if not yes_token:
+            if not yes_token or not yes_token.startswith("0x") or len(yes_token) < 10:
                 return
 
             # Fetch current data
