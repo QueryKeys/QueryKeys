@@ -1,0 +1,44 @@
+# ============================================================
+# Strategy Marketplace Configuration
+# Each strategy can be enabled/disabled and tuned independently
+# ============================================================
+
+strategies:
+  - name: "ensemble_edge"
+    enabled: true
+    class: "src.strategies.ensemble_edge.EnsembleEdgeStrategy"
+    params:
+      min_edge: 0.03
+      min_confidence: 0.55
+      kelly_fraction: 0.25
+      max_position_pct: 0.08
+    markets: "all"
+
+  - name: "sentiment_momentum"
+    enabled: true
+    class: "src.strategies.sentiment_momentum.SentimentMomentumStrategy"
+    params:
+      sentiment_threshold: 0.6
+      momentum_window: 12         # hours
+      min_volume_spike: 2.0       # 2x average
+      kelly_fraction: 0.15
+      max_position_pct: 0.05
+    markets: "all"
+
+  - name: "mean_reversion"
+    enabled: false
+    class: "src.strategies.mean_reversion.MeanReversionStrategy"
+    params:
+      zscore_threshold: 2.0
+      lookback_hours: 48
+      kelly_fraction: 0.10
+      max_position_pct: 0.04
+    markets: "all"
+
+  - name: "arbitrage"
+    enabled: true
+    class: "src.strategies.arbitrage.ArbitrageStrategy"
+    params:
+      min_arb_edge: 0.02
+      max_position_pct: 0.05
+    markets: "all"

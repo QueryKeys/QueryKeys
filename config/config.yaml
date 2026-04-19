@@ -1,0 +1,119 @@
+# ============================================================
+# QueryKeys Polymarket Bot — Master Configuration
+# ============================================================
+
+# ---- System ------------------------------------------------
+system:
+  mode: "paper"           # "live" | "paper" | "backtest"
+  log_level: "INFO"
+  db_url: "sqlite:///data/querykeys.db"
+  data_dir: "data"
+  models_dir: "models"
+
+# ---- Polymarket CLOB API -----------------------------------
+polymarket:
+  clob_api_url: "https://clob.polymarket.com"
+  gamma_api_url: "https://gamma-api.polymarket.com"
+  data_api_url: "https://data-api.polymarket.com"
+  neg_risk_adapter: "0xd91E80cF2eA078D68776e2f8FE25Dea05D80b5E5"
+  chain_id: 137           # Polygon mainnet
+  signature_type: 0       # 0=EOA, 1=poly_proxy, 2=poly_gnosis_safe
+  funder: ""              # leave blank to use wallet address
+  tick_size: 0.01
+
+# ---- WebSocket Feeds ---------------------------------------
+websocket:
+  clob_ws_url: "wss://ws-subscriptions-clob.polymarket.com/ws/"
+  reconnect_delay: 5
+  ping_interval: 30
+  max_reconnects: 10
+
+# ---- Market Scanning ---------------------------------------
+scanner:
+  min_volume_24h: 5000        # USD
+  min_liquidity: 2000         # USD
+  min_days_to_expiry: 1
+  max_days_to_expiry: 90
+  max_markets: 100
+  categories:
+    - "Politics"
+    - "Sports"
+    - "Crypto"
+    - "Economics"
+    - "Science"
+  rescan_interval: 300        # seconds
+
+# ---- Prediction Engine -------------------------------------
+prediction:
+  ensemble_weights:
+    bayesian: 0.20
+    lgbm: 0.25
+    xgboost: 0.20
+    catboost: 0.15
+    llm: 0.20
+  min_confidence: 0.55        # minimum model confidence to trade
+  min_edge: 0.03              # minimum edge over market price (3%)
+  calibration_method: "isotonic"   # "isotonic" | "platt"
+  uncertainty_threshold: 0.15 # max std across ensemble members
+  llm:
+    model: "claude-opus-4-7"
+    max_tokens: 1024
+    temperature: 0.1
+    fallback_model: "claude-sonnet-4-6"
+    cache_ttl: 3600           # seconds
+
+# ---- Sentiment Analysis ------------------------------------
+sentiment:
+  enabled: true
+  sources:
+    - "newsapi"
+    - "reddit"
+  window_hours: 24
+  min_articles: 3
+
+# ---- Risk Management ---------------------------------------
+risk:
+  max_portfolio_exposure: 0.80    # 80% of bankroll
+  max_single_market: 0.10         # 10% of bankroll per market
+  max_category_exposure: 0.30     # 30% per category
+  max_daily_loss: 0.05            # 5% of bankroll daily drawdown limit
+  max_drawdown: 0.20              # 20% total drawdown halt
+  kelly_fraction: 0.25            # fractional Kelly (safety multiplier)
+  min_kelly_edge: 0.01            # minimum edge for Kelly to activate
+  correlation_penalty: true       # reduce size for correlated positions
+  circuit_breaker_loss: 0.03      # pause trading after 3% intraday loss
+
+# ---- Order Execution ---------------------------------------
+execution:
+  default_order_type: "limit"     # "limit" | "market" | "gtc" | "fok"
+  slippage_tolerance: 0.005       # 0.5% max slippage
+  max_spread_pct: 0.05            # skip if spread > 5%
+  min_order_size: 5               # USD
+  max_order_size: 500             # USD
+  order_timeout: 60               # seconds before cancel
+  retry_attempts: 3
+  retry_delay: 2
+
+# ---- Backtesting -------------------------------------------
+backtesting:
+  start_date: "2024-01-01"
+  end_date: "2025-12-31"
+  initial_capital: 10000
+  commission: 0.0                 # Polymarket has no commission
+  monte_carlo_runs: 1000
+  walk_forward_folds: 5
+
+# ---- Dashboard ---------------------------------------------
+dashboard:
+  host: "0.0.0.0"
+  port: 8501
+  refresh_interval: 5             # seconds
+  alert_email: ""
+  alert_webhook: ""               # Slack/Discord webhook
+
+# ---- Rate Limits -------------------------------------------
+rate_limits:
+  gamma_api_rps: 10
+  data_api_rps: 10
+  clob_api_rps: 20
+  llm_api_rpm: 30
