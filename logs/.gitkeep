@@ -1,0 +1,2 @@
+# This file keeps the logs/ directory in git.
+# Log files are gitignored — they are generated at runtime.

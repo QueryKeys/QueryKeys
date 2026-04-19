@@ -16,10 +16,17 @@ build/
 .eggs/
 *.egg
 
-# Data & Models (large runtime files — root-level only)
-/data/
-/models/
-/logs/
+# Runtime-generated files inside data/ and models/ — keep the folders, ignore contents
+/data/*.db
+/data/*.sqlite3
+/data/*.sqlite
+/data/querykeys*.json
+/data/backtest_results*.json
+/models/*.pkl
+/models/*.bin
+/models/*.cbm
+/logs/*.log
+/logs/*.txt
 *.db
 *.sqlite3
 *.sqlite

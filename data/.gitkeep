@@ -1,0 +1,3 @@
+# This file keeps the data/ directory in git.
+# Runtime files (*.db, *.sqlite, *.json) are gitignored — they are generated at runtime.
+# Place your historical_markets.json here for backtesting.

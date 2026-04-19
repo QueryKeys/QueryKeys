@@ -1,0 +1,44 @@
+[
+  {
+    "condition_id": "0xabc123...",
+    "timestamp": "2024-03-15T12:00:00Z",
+    "question": "Will candidate X win the 2024 election?",
+    "category": "Politics",
+    "yes_price": 0.62,
+    "volume_24h": 15000,
+    "liquidity": 8000,
+    "dte_days": 45,
+    "resolved": true,
+    "outcome": 1.0,
+    "sentiment_score": 0.3,
+    "sentiment_confidence": 0.7,
+    "price_momentum": 0.05,
+    "price_history": [
+      {"t": 1710000000, "p": 0.55},
+      {"t": 1710003600, "p": 0.57},
+      {"t": 1710007200, "p": 0.59},
+      {"t": 1710010800, "p": 0.62}
+    ]
+  },
+  {
+    "condition_id": "0xdef456...",
+    "timestamp": "2024-04-01T09:00:00Z",
+    "question": "Will Bitcoin exceed $80,000 by June 2024?",
+    "category": "Crypto",
+    "yes_price": 0.45,
+    "volume_24h": 52000,
+    "liquidity": 30000,
+    "dte_days": 60,
+    "resolved": true,
+    "outcome": 0.0,
+    "sentiment_score": -0.1,
+    "sentiment_confidence": 0.5,
+    "price_momentum": -0.02,
+    "price_history": [
+      {"t": 1711958400, "p": 0.50},
+      {"t": 1711962000, "p": 0.48},
+      {"t": 1711965600, "p": 0.46},
+      {"t": 1711969200, "p": 0.45}
+    ]
+  }
+]
