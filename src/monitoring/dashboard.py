@@ -325,8 +325,8 @@ def _fig(fig: go.Figure, title: str, h: int = 350) -> go.Figure:
         paper_bgcolor=c["plot_paper"],
         plot_bgcolor=c["plot_bg"],
         font=dict(family="Share Tech Mono,monospace", color=c["text"]),
-        xaxis=dict(gridcolor=f"{c['border']}1a", linecolor=f"{c['border']}55"),
-        yaxis=dict(gridcolor=f"{c['border']}1a", linecolor=f"{c['border']}55"),
+        xaxis=dict(gridcolor=rgba(c["border"], 0.1), linecolor=rgba(c["border"], 0.33)),
+        yaxis=dict(gridcolor=rgba(c["border"], 0.1), linecolor=rgba(c["border"], 0.33)),
         margin=dict(l=40, r=20, t=50, b=40),
     )
     return fig
@@ -625,8 +625,8 @@ def render_risk():
             "bgcolor": safe_bg,
             "steps": [
                 {"range": [0,  60], "color": safe_bg},
-                {"range": [60, 80], "color": f"{c['warning']}44"},
-                {"range": [80, 100],"color": f"{c['danger']}44"},
+                {"range": [60, 80], "color": rgba(c["warning"], 0.27)},
+                {"range": [80, 100],"color": rgba(c["danger"], 0.27)},
             ],
             "threshold": {
                 "line": {"color": c["warning"], "width": 3},
