@@ -56,10 +56,10 @@ prediction:
   calibration_method: "isotonic"   # "isotonic" | "platt"
   uncertainty_threshold: 0.15 # max std across ensemble members
   llm:
-    model: "claude-opus-4-7"
+    model: "llama-3.3-70b-versatile"
     max_tokens: 1024
     temperature: 0.1
-    fallback_model: "claude-sonnet-4-6"
+    fallback_model: "mixtral-8x7b-32768"
     cache_ttl: 3600           # seconds
 
 # ---- Sentiment Analysis ------------------------------------
@@ -119,7 +119,7 @@ ai_builder:
   # Minimum trades required before auto-generation triggers
   min_trades_for_generation: 20
   # Model used for strategy generation (can be different from prediction LLM)
-  model: "claude-opus-4-7"
+  model: "llama-3.3-70b-versatile"
   max_tokens: 2048
   # Auto-enable generated strategies in strategies.yaml
   auto_enable: true
