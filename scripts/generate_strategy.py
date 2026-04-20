@@ -73,8 +73,8 @@ async def main() -> None:
     args = parse_args()
     settings = get_settings()
 
-    if not settings.anthropic_api_key:
-        print("ERROR: ANTHROPIC_API_KEY is not set. See README for setup instructions.")
+    if not settings.groq_api_key:
+        print("ERROR: GROQ_API_KEY is not set. Get a free key at console.groq.com and add it to .env")
         sys.exit(1)
 
     builder = AIStrategyBuilder(settings)
