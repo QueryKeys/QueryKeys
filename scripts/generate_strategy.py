@@ -73,7 +73,7 @@ async def main() -> None:
     args = parse_args()
     settings = get_settings()
 
-    if not settings.anthropic.api_key:
+    if not settings.anthropic_api_key:
         print("ERROR: ANTHROPIC_API_KEY is not set. See README for setup instructions.")
         sys.exit(1)
 
