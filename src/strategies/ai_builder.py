@@ -180,7 +180,7 @@ class AIStrategyBuilder:
 
     def __init__(self, settings: Settings) -> None:
         self._settings = settings
-        self._client = anthropic.AsyncAnthropic(api_key=settings.anthropic.api_key)
+        self._client = anthropic.AsyncAnthropic(api_key=settings.anthropic_api_key)
         self._model = settings.prediction.llm_model
         self._GENERATED_DIR.mkdir(parents=True, exist_ok=True)
         _init_file = self._GENERATED_DIR / "__init__.py"
