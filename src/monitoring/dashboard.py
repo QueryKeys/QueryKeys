@@ -20,6 +20,13 @@ import plotly.graph_objects as go
 import streamlit as st
 from sqlalchemy import create_engine, text
 
+
+def rgba(hex_color: str, alpha: float) -> str:
+    """Convert '#rrggbb' + alpha float to 'rgba(r,g,b,alpha)' for Plotly."""
+    h = hex_color.lstrip("#")
+    r, g, b = int(h[0:2], 16), int(h[2:4], 16), int(h[4:6], 16)
+    return f"rgba({r},{g},{b},{alpha})"
+
 # ── page config (must be first Streamlit call) ──────────────────────────────
 st.set_page_config(
     page_title="QueryKeys // TERMINAL",
@@ -431,7 +438,7 @@ def render_portfolio():
         x=df["timestamp"], y=df["total_value"],
         mode="lines", name="EQUITY",
         line=dict(color=c["accent"], width=2),
-        fill="tozeroy", fillcolor=f"{c['accent']}18",
+        fill="tozeroy", fillcolor=rgba(c["accent"], 0.1),
     ))
     st.plotly_chart(_fig(fig, "Equity Curve", 350), use_container_width=True)
 
@@ -449,7 +456,7 @@ def render_portfolio():
         fig3.add_trace(go.Scatter(
             x=df["timestamp"], y=-df["drawdown"] * 100,
             mode="lines", fill="tozeroy",
-            line=dict(color=c["danger"]), fillcolor=f"{c['danger']}2a",
+            line=dict(color=c["danger"]), fillcolor=rgba(c["danger"], 0.16),
             name="DRAWDOWN",
         ))
         st.plotly_chart(_fig(fig3, "Drawdown %", 280), use_container_width=True)
@@ -464,7 +471,7 @@ def _demo_portfolio():
     fig.add_trace(go.Scatter(
         x=dates, y=equity, mode="lines",
         line=dict(color=c["accent"], width=2),
-        fill="tozeroy", fillcolor=f"{c['accent']}18",
+        fill="tozeroy", fillcolor=rgba(c["accent"], 0.1),
         name="DEMO",
     ))
     st.plotly_chart(_fig(fig, "Demo Equity Curve (no live data)", 350), use_container_width=True)
@@ -659,7 +666,7 @@ def render_backtest():
         fig.add_trace(go.Scatter(
             y=eq, mode="lines", name="BT_EQUITY",
             line=dict(color=c["accent"], width=2),
-            fill="tozeroy", fillcolor=f"{c['accent']}18",
+            fill="tozeroy", fillcolor=rgba(c["accent"], 0.1),
         ))
         st.plotly_chart(_fig(fig, "Backtest Equity Curve", 350), use_container_width=True)
 
