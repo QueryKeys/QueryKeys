@@ -37,7 +37,10 @@ def main():
         "--server.address", args.host,
         "--server.headless", "true",
         "--theme.base", "dark",
-        "--theme.primaryColor", "#00d4aa",
+        "--theme.backgroundColor", "#0a0a0a",
+        "--theme.secondaryBackgroundColor", "#0d1117",
+        "--theme.textColor", "#00ff41",
+        "--theme.primaryColor", "#00ff41",
     ]
     print(f"Starting dashboard at http://{args.host}:{args.port}")
     subprocess.run(cmd)

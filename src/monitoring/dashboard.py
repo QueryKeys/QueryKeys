@@ -1,26 +1,17 @@
 """
-Real-time Streamlit dashboard for QueryKeys Polymarket Bot.
-
-Pages:
-  1. Portfolio Overview — equity curve, P&L, drawdown, open positions
-  2. Market Scanner — active markets, scores, edges
-  3. Predictions — ensemble breakdown per market, model agreement
-  4. Orders — live order status, fill history
-  5. Risk Monitor — exposure heatmap, category breakdown, alerts
-  6. Backtest Results — metrics, MC fan chart, walk-forward
-
+QueryKeys — Retro Terminal Dashboard
+Phosphor-green CRT aesthetic with Dark / Light mode toggle.
 Run: streamlit run src/monitoring/dashboard.py
 """
 
 from __future__ import annotations
 
-import asyncio
 import json
 import os
 import time
-from datetime import datetime, timedelta
+from datetime import datetime
 from pathlib import Path
-from typing import Any, Dict, List, Optional
+from typing import Dict, Optional
 
 import numpy as np
 import pandas as pd
@@ -29,262 +20,529 @@ import plotly.graph_objects as go
 import streamlit as st
 from sqlalchemy import create_engine, text
 
-# ---------------------------------------------------------------------------
-# Page config (must be first Streamlit call)
-# ---------------------------------------------------------------------------
+# ── page config (must be first Streamlit call) ──────────────────────────────
 st.set_page_config(
-    page_title="QueryKeys — Polymarket Bot",
-    page_icon="📈",
+    page_title="QueryKeys // TERMINAL",
+    page_icon="⌨",
     layout="wide",
     initial_sidebar_state="expanded",
 )
 
-# ---------------------------------------------------------------------------
-# DB helpers
-# ---------------------------------------------------------------------------
+# ── theme definitions ────────────────────────────────────────────────────────
+DARK = {
+    "bg":           "#0a0a0a",
+    "bg2":          "#0d1117",
+    "text":         "#00ff41",
+    "text_dim":     "#008f11",
+    "text_bright":  "#ccffcc",
+    "accent":       "#00ff41",
+    "accent2":      "#00d4aa",
+    "danger":       "#ff3333",
+    "warning":      "#ffaa00",
+    "border":       "#00ff41",
+    "card":         "#0a1a0a",
+    "plot_bg":      "#0a0a0a",
+    "plot_paper":   "#0d1117",
+    "plotly_tpl":   "plotly_dark",
+    "glow":         "#00ff41",
+    "scanline":     "rgba(0,255,65,0.03)",
+    "label":        "◉ DARK MODE",
+}
 
+LIGHT = {
+    "bg":           "#f0ede0",
+    "bg2":          "#e4e0cc",
+    "text":         "#1a4a1a",
+    "text_dim":     "#4a7a4a",
+    "text_bright":  "#0a200a",
+    "accent":       "#1a6a1a",
+    "accent2":      "#1a6644",
+    "danger":       "#cc1111",
+    "warning":      "#cc7700",
+    "border":       "#2a7a2a",
+    "card":         "#dde8cc",
+    "plot_bg":      "#f0ede0",
+    "plot_paper":   "#e4e0cc",
+    "plotly_tpl":   "plotly_white",
+    "glow":         "#2a7a2a",
+    "scanline":     "rgba(0,80,0,0.04)",
+    "label":        "◎ LIGHT MODE",
+}
+
+if "theme" not in st.session_state:
+    st.session_state.theme = "dark"
+
+
+def T() -> dict:
+    return DARK if st.session_state.theme == "dark" else LIGHT
+
+
+# ── CSS injection ────────────────────────────────────────────────────────────
+def inject_css():
+    c = T()
+    st.markdown(f"""
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=VT323:wght@400&display=swap');
+
+/* ── global ── */
+html, body, [class*="css"] {{
+    font-family: 'Share Tech Mono', 'Courier New', monospace !important;
+    background-color: {c['bg']} !important;
+    color: {c['text']} !important;
+}}
+
+/* ── scanlines overlay ── */
+.main::before {{
+    content: "";
+    position: fixed;
+    top: 0; left: 0; width: 100%; height: 100%;
+    background: repeating-linear-gradient(
+        0deg,
+        {c['scanline']} 0px, {c['scanline']} 1px,
+        transparent 1px, transparent 3px
+    );
+    pointer-events: none;
+    z-index: 9999;
+}}
+
+/* ── vignette ── */
+.main::after {{
+    content: "";
+    position: fixed;
+    top: 0; left: 0; width: 100%; height: 100%;
+    background: radial-gradient(ellipse at center, transparent 60%, rgba(0,0,0,0.45) 100%);
+    pointer-events: none;
+    z-index: 9998;
+}}
+
+/* ── main content area ── */
+.main .block-container {{
+    background-color: {c['bg']} !important;
+    padding: 1.5rem 2rem !important;
+}}
+
+/* ── sidebar ── */
+[data-testid="stSidebar"] {{
+    background-color: {c['bg2']} !important;
+    border-right: 1px solid {c['border']} !important;
+    box-shadow: 4px 0 24px {c['glow']}22 !important;
+}}
+[data-testid="stSidebar"] * {{
+    font-family: 'Share Tech Mono', monospace !important;
+    color: {c['text']} !important;
+}}
+
+/* ── headers ── */
+h1, h2, h3, h4 {{
+    font-family: 'VT323', monospace !important;
+    color: {c['text']} !important;
+    text-shadow: 0 0 8px {c['glow']}99, 0 0 18px {c['glow']}44 !important;
+    letter-spacing: 4px !important;
+    text-transform: uppercase !important;
+    border-bottom: 1px solid {c['border']}55 !important;
+    padding-bottom: 6px !important;
+}}
+
+/* ── metric cards ── */
+[data-testid="metric-container"] {{
+    background-color: {c['card']} !important;
+    border: 1px solid {c['border']} !important;
+    border-radius: 0 !important;
+    padding: 14px !important;
+    box-shadow: 0 0 12px {c['glow']}33, inset 0 0 8px {c['glow']}0d !important;
+    animation: pulse-glow 4s ease-in-out infinite !important;
+}}
+[data-testid="stMetricLabel"] > div {{
+    color: {c['text_dim']} !important;
+    font-size: 0.72rem !important;
+    letter-spacing: 3px !important;
+    text-transform: uppercase !important;
+}}
+[data-testid="stMetricValue"] > div {{
+    font-family: 'VT323', monospace !important;
+    font-size: 2.1rem !important;
+    color: {c['text_bright']} !important;
+    text-shadow: 0 0 10px {c['glow']}bb !important;
+}}
+[data-testid="stMetricDelta"] svg {{ display: none !important; }}
+[data-testid="stMetricDelta"] > div {{
+    color: {c['accent2']} !important;
+    font-size: 0.72rem !important;
+    letter-spacing: 1px !important;
+}}
+
+/* ── buttons ── */
+.stButton > button {{
+    background: transparent !important;
+    border: 1px solid {c['border']} !important;
+    color: {c['text']} !important;
+    font-family: 'Share Tech Mono', monospace !important;
+    border-radius: 0 !important;
+    letter-spacing: 2px !important;
+    text-transform: uppercase !important;
+    box-shadow: 0 0 8px {c['glow']}44 !important;
+    transition: all 0.15s !important;
+}}
+.stButton > button:hover {{
+    background: {c['accent']}22 !important;
+    box-shadow: 0 0 18px {c['glow']}99 !important;
+    color: {c['text_bright']} !important;
+}}
+
+/* ── selectbox / checkbox ── */
+.stSelectbox > div > div,
+.stCheckbox > label {{
+    background-color: {c['card']} !important;
+    border: 1px solid {c['border']}88 !important;
+    border-radius: 0 !important;
+    color: {c['text']} !important;
+}}
+
+/* ── dataframe ── */
+[data-testid="stDataFrame"] {{
+    border: 1px solid {c['border']}66 !important;
+    box-shadow: 0 0 12px {c['glow']}22 !important;
+}}
+
+/* ── divider ── */
+hr {{
+    border-color: {c['border']}55 !important;
+    box-shadow: 0 0 6px {c['glow']}44 !important;
+}}
+
+/* ── info / alert ── */
+.stAlert {{
+    background-color: {c['card']} !important;
+    border: 1px solid {c['border']}88 !important;
+    border-radius: 0 !important;
+}}
+
+/* ── radio ── */
+[data-testid="stRadio"] label {{
+    font-family: 'Share Tech Mono', monospace !important;
+}}
+
+/* ── json ── */
+.stJson {{
+    background-color: {c['card']} !important;
+    border: 1px solid {c['border']}44 !important;
+    font-family: 'Share Tech Mono', monospace !important;
+    font-size: 0.8rem !important;
+}}
+
+/* ── scrollbar ── */
+::-webkit-scrollbar {{ width: 5px; }}
+::-webkit-scrollbar-track {{ background: {c['bg']}; }}
+::-webkit-scrollbar-thumb {{ background: {c['border']}55; }}
+::-webkit-scrollbar-thumb:hover {{ background: {c['border']}; }}
+
+/* ── blink cursor ── */
+@keyframes blink {{
+    0%, 100% {{ opacity: 1; }}
+    50% {{ opacity: 0; }}
+}}
+.cursor {{
+    display: inline-block;
+    width: 10px; height: 1.1em;
+    background: {c['text']};
+    animation: blink 1.1s step-start infinite;
+    vertical-align: text-bottom;
+    margin-left: 3px;
+}}
+
+/* ── glow pulse on cards ── */
+@keyframes pulse-glow {{
+    0%, 100% {{ box-shadow: 0 0 8px {c['glow']}33, inset 0 0 6px {c['glow']}0d; }}
+    50%  {{ box-shadow: 0 0 20px {c['glow']}66, inset 0 0 12px {c['glow']}1a; }}
+}}
+</style>
+""", unsafe_allow_html=True)
+
+
+# ── DB helpers ───────────────────────────────────────────────────────────────
 @st.cache_resource
 def get_engine():
     db_url = os.getenv("DATABASE_URL", "sqlite:///data/querykeys.db")
-    # Use sync engine for Streamlit
-    sync_url = db_url.replace("sqlite+aiosqlite:///", "sqlite:///").replace(
-        "postgresql+asyncpg://", "postgresql://"
-    )
+    sync_url = (db_url
+                .replace("sqlite+aiosqlite:///", "sqlite:///")
+                .replace("postgresql+asyncpg://", "postgresql://"))
     return create_engine(sync_url)
 
 
-def query_df(sql: str, params: Optional[Dict] = None) -> pd.DataFrame:
+def qdf(sql: str, params: Optional[Dict] = None) -> pd.DataFrame:
     try:
         with get_engine().connect() as conn:
             return pd.read_sql(text(sql), conn, params=params or {})
-    except Exception as e:
+    except Exception:
         return pd.DataFrame()
 
 
-# ---------------------------------------------------------------------------
-# Sidebar
-# ---------------------------------------------------------------------------
+# ── UI helpers ───────────────────────────────────────────────────────────────
+def term_header(title: str, level: int = 1):
+    c = T()
+    tag = f"h{level}"
+    prefix = "██" if level == 1 else "▶▶"
+    st.markdown(
+        f"<{tag} style='font-family:VT323,monospace;color:{c['text']};"
+        f"text-shadow:0 0 10px {c['glow']}99;letter-spacing:4px;"
+        f"border-bottom:1px solid {c['border']}55;padding-bottom:6px;'>"
+        f"{prefix} {title.upper()} <span class='cursor'></span></{tag}>",
+        unsafe_allow_html=True,
+    )
 
+
+def status_bar(pairs: list[tuple[str, str]]):
+    c = T()
+    cells = "  │  ".join(
+        f"<span style='color:{c['text_dim']}'>{k}:</span>"
+        f"<span style='color:{c['text_bright']};margin-left:4px'>{v}</span>"
+        for k, v in pairs
+    )
+    st.markdown(
+        f"<div style='font-family:Share Tech Mono,monospace;font-size:.78rem;"
+        f"padding:6px 12px;background:{c['card']};border:1px solid {c['border']}44;"
+        f"margin-bottom:14px;letter-spacing:1px;'>▸ {cells}</div>",
+        unsafe_allow_html=True,
+    )
+
+
+def _fig(fig: go.Figure, title: str, h: int = 350) -> go.Figure:
+    c = T()
+    fig.update_layout(
+        title=dict(
+            text=f"▶  {title.upper()}",
+            font=dict(family="VT323,monospace", size=20, color=c["text"]),
+        ),
+        template=c["plotly_tpl"],
+        height=h,
+        paper_bgcolor=c["plot_paper"],
+        plot_bgcolor=c["plot_bg"],
+        font=dict(family="Share Tech Mono,monospace", color=c["text"]),
+        xaxis=dict(gridcolor=f"{c['border']}1a", linecolor=f"{c['border']}55"),
+        yaxis=dict(gridcolor=f"{c['border']}1a", linecolor=f"{c['border']}55"),
+        margin=dict(l=40, r=20, t=50, b=40),
+    )
+    return fig
+
+
+# ── sidebar ──────────────────────────────────────────────────────────────────
 def render_sidebar():
+    c = T()
     with st.sidebar:
-        st.image("https://polymarket.com/static/favicon.ico", width=32)
-        st.title("QueryKeys")
-        st.markdown("**Elite Prediction Market Bot**")
-        st.divider()
+        # ASCII logo
+        st.markdown(
+            f"<pre style='color:{c['text']};font-size:.65rem;line-height:1.25;"
+            f"text-shadow:0 0 8px {c['glow']}88;text-align:center;margin:0 0 4px;'>"
+            " ██████  ██   ██\n"
+            "██    ██ ██  ██ \n"
+            "██    ██ █████  \n"
+            "██ ▄▄ ██ ██  ██ \n"
+            " ██████  ██   ██\n"
+            "    ▀▀           </pre>",
+            unsafe_allow_html=True,
+        )
+        st.markdown(
+            f"<div style='text-align:center;font-size:.68rem;letter-spacing:3px;"
+            f"color:{c['text_dim']};margin-bottom:10px'>QUERYKEYS v1.0.0</div>",
+            unsafe_allow_html=True,
+        )
+        st.markdown(f"<hr style='border-color:{c['border']}44;margin:6px 0'>", unsafe_allow_html=True)
 
+        # theme toggle
+        ca, cb = st.columns(2)
+        with ca:
+            if st.button("◐ DARK", use_container_width=True):
+                st.session_state.theme = "dark"
+                st.rerun()
+        with cb:
+            if st.button("◑ LIGHT", use_container_width=True):
+                st.session_state.theme = "light"
+                st.rerun()
+        st.markdown(
+            f"<div style='text-align:center;font-size:.68rem;color:{c['text_dim']};"
+            f"margin:4px 0 8px'>{c['label']}</div>",
+            unsafe_allow_html=True,
+        )
+
+        st.markdown(f"<hr style='border-color:{c['border']}44;margin:6px 0'>", unsafe_allow_html=True)
+
+        # bot mode
         mode = os.getenv("BOT_MODE", "paper")
-        color = "🟢" if mode == "live" else "🟡"
-        st.markdown(f"{color} Mode: **{mode.upper()}**")
+        dot_col = "#00ff41" if mode == "live" else "#ffaa00"
+        st.markdown(
+            f"<div style='font-size:.85rem;padding:4px 2px'>"
+            f"<span style='color:{dot_col};text-shadow:0 0 8px {dot_col}'>●</span>"
+            f"  MODE: <b style='color:{c['text_bright']}'>{mode.upper()}</b></div>",
+            unsafe_allow_html=True,
+        )
+        st.markdown(
+            f"<div style='font-size:.72rem;color:{c['text_dim']};padding:2px'>"
+            f"SYS_CLOCK: {datetime.now().strftime('%H:%M:%S')}</div>",
+            unsafe_allow_html=True,
+        )
 
-        refresh = st.slider("Auto-refresh (s)", 5, 60, 10)
-        st.markdown(f"Last refresh: `{datetime.now().strftime('%H:%M:%S')}`")
+        st.markdown(f"<hr style='border-color:{c['border']}44;margin:8px 0'>", unsafe_allow_html=True)
+        refresh = st.slider("REFRESH (s)", 5, 60, 10)
+        st.markdown(f"<hr style='border-color:{c['border']}44;margin:8px 0'>", unsafe_allow_html=True)
 
         page = st.radio(
-            "Navigation",
-            ["Portfolio", "Markets", "Predictions", "Orders", "Risk", "Backtest"],
+            "NAV",
+            ["▸ PORTFOLIO", "▸ MARKETS", "▸ PREDICTIONS",
+             "▸ ORDERS", "▸ RISK", "▸ BACKTEST"],
         )
-        st.divider()
-        st.caption("v1.0.0 | QueryKeys")
+        page = page.replace("▸ ", "")
+
     return page, refresh
 
 
-# ---------------------------------------------------------------------------
-# Portfolio page
-# ---------------------------------------------------------------------------
-
+# ── portfolio ────────────────────────────────────────────────────────────────
 def render_portfolio():
-    st.header("Portfolio Overview")
+    term_header("Portfolio Overview")
+    c = T()
 
-    df = query_df("""
-        SELECT * FROM portfolio_snapshots
-        ORDER BY timestamp DESC LIMIT 1000
-    """)
-
+    df = qdf("SELECT * FROM portfolio_snapshots ORDER BY timestamp DESC LIMIT 1000")
     if df.empty:
-        st.info("No portfolio data yet. Start the bot to begin trading.")
+        st.info("⚠  NO PORTFOLIO DATA — START THE BOT TO BEGIN TRADING")
         _demo_portfolio()
         return
 
     df["timestamp"] = pd.to_datetime(df["timestamp"])
     df = df.sort_values("timestamp")
-    latest = df.iloc[-1]
+    lat = df.iloc[-1]
 
-    # KPI row
-    col1, col2, col3, col4, col5 = st.columns(5)
-    with col1:
-        st.metric("Total Value", f"${latest['total_value']:,.2f}",
-                  delta=f"${latest['daily_pnl']:+,.2f} today")
-    with col2:
-        st.metric("Cash", f"${latest['cash']:,.2f}")
-    with col3:
-        st.metric("Invested", f"${latest['invested']:,.2f}")
-    with col4:
-        st.metric("Total P&L", f"${latest['realized_pnl']:+,.2f}",
-                  delta=f"${latest['unrealized_pnl']:+,.2f} unrealized")
-    with col5:
-        dd = latest["drawdown"] * 100
-        st.metric("Drawdown", f"{dd:.2f}%",
-                  delta=None,
-                  delta_color="inverse")
+    status_bar([
+        ("TOTAL", f"${lat['total_value']:,.2f}"),
+        ("DAILY_PNL", f"${lat['daily_pnl']:+,.2f}"),
+        ("DRAWDOWN", f"{lat['drawdown']*100:.2f}%"),
+        ("CLOCK", datetime.now().strftime("%H:%M:%S")),
+    ])
+
+    c1, c2, c3, c4, c5 = st.columns(5)
+    with c1: st.metric("TOTAL VALUE",  f"${lat['total_value']:,.2f}", f"${lat['daily_pnl']:+,.2f}")
+    with c2: st.metric("CASH",         f"${lat['cash']:,.2f}")
+    with c3: st.metric("INVESTED",     f"${lat['invested']:,.2f}")
+    with c4: st.metric("TOTAL P&L",    f"${lat['realized_pnl']:+,.2f}", f"${lat['unrealized_pnl']:+,.2f} unrlzd")
+    with c5: st.metric("DRAWDOWN",     f"{lat['drawdown']*100:.2f}%", delta_color="inverse")
 
     st.divider()
 
-    # Equity curve
     fig = go.Figure()
     fig.add_trace(go.Scatter(
         x=df["timestamp"], y=df["total_value"],
-        mode="lines", name="Portfolio Value",
-        line=dict(color="#00d4aa", width=2),
-        fill="tozeroy", fillcolor="rgba(0,212,170,0.1)",
+        mode="lines", name="EQUITY",
+        line=dict(color=c["accent"], width=2),
+        fill="tozeroy", fillcolor=f"{c['accent']}18",
     ))
-    fig.update_layout(
-        title="Equity Curve",
-        xaxis_title="Time",
-        yaxis_title="Portfolio Value ($)",
-        template="plotly_dark",
-        height=350,
-    )
-    st.plotly_chart(fig, use_container_width=True)
+    st.plotly_chart(_fig(fig, "Equity Curve", 350), use_container_width=True)
 
-    col_left, col_right = st.columns(2)
-
-    # Daily P&L bars
-    with col_left:
+    cl, cr = st.columns(2)
+    with cl:
         fig2 = go.Figure()
         fig2.add_trace(go.Bar(
             x=df["timestamp"], y=df["daily_pnl"],
-            marker_color=["#00d4aa" if v >= 0 else "#ff4b4b" for v in df["daily_pnl"]],
-            name="Daily P&L",
+            marker_color=[c["accent"] if v >= 0 else c["danger"] for v in df["daily_pnl"]],
+            name="DAILY P&L",
         ))
-        fig2.update_layout(
-            title="Daily P&L", template="plotly_dark", height=280
-        )
-        st.plotly_chart(fig2, use_container_width=True)
-
-    # Drawdown chart
-    with col_right:
+        st.plotly_chart(_fig(fig2, "Daily P&L", 280), use_container_width=True)
+    with cr:
         fig3 = go.Figure()
         fig3.add_trace(go.Scatter(
             x=df["timestamp"], y=-df["drawdown"] * 100,
             mode="lines", fill="tozeroy",
-            line=dict(color="#ff4b4b"), fillcolor="rgba(255,75,75,0.2)",
-            name="Drawdown %",
+            line=dict(color=c["danger"]), fillcolor=f"{c['danger']}2a",
+            name="DRAWDOWN",
         ))
-        fig3.update_layout(
-            title="Drawdown", template="plotly_dark", height=280,
-            yaxis_title="Drawdown (%)",
-        )
-        st.plotly_chart(fig3, use_container_width=True)
+        st.plotly_chart(_fig(fig3, "Drawdown %", 280), use_container_width=True)
 
 
 def _demo_portfolio():
-    """Show demo chart when no data exists."""
+    c = T()
     np.random.seed(42)
     dates = pd.date_range("2025-01-01", periods=100, freq="D")
-    rets = np.random.normal(0.003, 0.02, 100)
-    equity = 10000 * np.cumprod(1 + rets)
-    fig = px.line(x=dates, y=equity, title="Demo Equity Curve (no live data)",
-                  template="plotly_dark")
-    st.plotly_chart(fig, use_container_width=True)
+    equity = 10000 * np.cumprod(1 + np.random.normal(0.003, 0.02, 100))
+    fig = go.Figure()
+    fig.add_trace(go.Scatter(
+        x=dates, y=equity, mode="lines",
+        line=dict(color=c["accent"], width=2),
+        fill="tozeroy", fillcolor=f"{c['accent']}18",
+        name="DEMO",
+    ))
+    st.plotly_chart(_fig(fig, "Demo Equity Curve (no live data)", 350), use_container_width=True)
 
 
-# ---------------------------------------------------------------------------
-# Markets page
-# ---------------------------------------------------------------------------
-
+# ── markets ──────────────────────────────────────────────────────────────────
 def render_markets():
-    st.header("Active Markets")
+    term_header("Active Markets")
+    c = T()
 
-    df = query_df("""
-        SELECT condition_id, question, category,
-               volume_24h, liquidity, end_date, active
-        FROM markets
-        WHERE active = 1
-        ORDER BY volume_24h DESC
-        LIMIT 100
+    df = qdf("""
+        SELECT condition_id, question, category, volume_24h, liquidity, end_date
+        FROM markets WHERE active = 1 ORDER BY volume_24h DESC LIMIT 100
     """)
-
     if df.empty:
-        st.info("No markets scanned yet.")
+        st.info("⚠  NO MARKETS SCANNED YET")
         return
 
     df["end_date"] = pd.to_datetime(df["end_date"])
-    df["dte"] = (df["end_date"] - pd.Timestamp.now()).dt.days
+    df["DTE"] = (df["end_date"] - pd.Timestamp.now()).dt.days
     df["volume_24h"] = df["volume_24h"].apply(lambda x: f"${x:,.0f}")
-    df["liquidity"] = df["liquidity"].apply(lambda x: f"${x:,.0f}")
+    df["liquidity"]  = df["liquidity"].apply(lambda x: f"${x:,.0f}")
 
-    # Category filter
-    cats = ["All"] + sorted(df["category"].dropna().unique().tolist())
-    cat_filter = st.selectbox("Filter by category", cats)
-    if cat_filter != "All":
-        df = df[df["category"] == cat_filter]
+    cats = ["ALL"] + sorted(df["category"].dropna().unique().tolist())
+    sel = st.selectbox("FILTER_CATEGORY", cats)
+    if sel != "ALL":
+        df = df[df["category"] == sel]
 
     st.dataframe(
-        df[["question", "category", "volume_24h", "liquidity", "dte"]],
-        use_container_width=True,
-        height=500,
+        df[["question", "category", "volume_24h", "liquidity", "DTE"]],
+        use_container_width=True, height=450,
     )
 
-    # Category breakdown pie
-    cat_df = query_df("SELECT category, COUNT(*) as count FROM markets GROUP BY category")
+    cat_df = qdf("SELECT category, COUNT(*) as cnt FROM markets GROUP BY category")
     if not cat_df.empty:
-        fig = px.pie(cat_df, names="category", values="count",
-                     title="Markets by Category", template="plotly_dark")
-        st.plotly_chart(fig, use_container_width=True)
+        fig = px.pie(
+            cat_df, names="category", values="cnt",
+            color_discrete_sequence=[c["accent"], c["accent2"], c["warning"], c["danger"]],
+        )
+        st.plotly_chart(_fig(fig, "Markets by Category", 320), use_container_width=True)
 
 
-# ---------------------------------------------------------------------------
-# Predictions page
-# ---------------------------------------------------------------------------
-
+# ── predictions ──────────────────────────────────────────────────────────────
 def render_predictions():
-    st.header("Ensemble Predictions")
+    term_header("Ensemble Predictions")
+    c = T()
 
-    df = query_df("""
+    df = qdf("""
         SELECT p.condition_id, p.timestamp, p.yes_probability,
                p.confidence, p.uncertainty, p.edge, p.market_price,
                m.question, m.category
         FROM predictions p
         LEFT JOIN markets m ON p.condition_id = m.condition_id
-        ORDER BY p.timestamp DESC
-        LIMIT 200
+        ORDER BY p.timestamp DESC LIMIT 200
     """)
-
     if df.empty:
-        st.info("No predictions yet.")
+        st.info("⚠  NO PREDICTIONS YET")
         return
 
     df["timestamp"] = pd.to_datetime(df["timestamp"])
-    df["edge_pct"] = (df["edge"] * 100).round(2)
+    df["edge_pct"]  = (df["edge"] * 100).round(2)
 
-    # Filter: show only predictions with edge
-    show_edge_only = st.checkbox("Show only predictions with edge > 2%", value=True)
-    if show_edge_only:
+    if st.checkbox("FILTER: EDGE > 2%", value=True):
         df = df[df["edge"].abs() > 0.02]
 
     col1, col2 = st.columns(2)
-    with col1:
-        st.metric("Avg Edge", f"{df['edge_pct'].mean():.2f}%")
-    with col2:
-        st.metric("Avg Confidence", f"{df['confidence'].mean():.2f}")
+    with col1: st.metric("AVG EDGE",       f"{df['edge_pct'].mean():.2f}%")
+    with col2: st.metric("AVG CONFIDENCE", f"{df['confidence'].mean():.2f}")
 
-    # Scatter: model prob vs market price
     fig = px.scatter(
-        df,
-        x="market_price",
-        y="yes_probability",
-        color="edge_pct",
-        size="confidence",
+        df, x="market_price", y="yes_probability",
+        color="edge_pct", size="confidence",
         hover_data=["question", "category", "uncertainty"],
-        color_continuous_scale="RdYlGn",
-        title="Model Probability vs Market Price",
-        template="plotly_dark",
+        color_continuous_scale=[[0, c["danger"]], [0.5, c["warning"]], [1, c["accent"]]],
     )
     fig.add_shape(type="line", x0=0, y0=0, x1=1, y1=1,
-                  line=dict(color="white", dash="dash"))
-    st.plotly_chart(fig, use_container_width=True)
-
-    # Table
+                  line=dict(color=c["text_dim"], dash="dash"))
+    st.plotly_chart(_fig(fig, "Model Probability vs Market Price", 400), use_container_width=True)
     st.dataframe(
         df[["question", "category", "market_price", "yes_probability",
             "edge_pct", "confidence", "uncertainty"]].head(50),
@@ -292,190 +550,144 @@ def render_predictions():
     )
 
 
-# ---------------------------------------------------------------------------
-# Orders page
-# ---------------------------------------------------------------------------
-
+# ── orders ───────────────────────────────────────────────────────────────────
 def render_orders():
-    st.header("Order Management")
+    term_header("Order Management")
+    c = T()
 
-    df = query_df("""
+    df = qdf("""
         SELECT order_id, condition_id, side, order_type,
-               price, size, status, filled_size, avg_fill_price,
-               created_at
-        FROM orders
-        ORDER BY created_at DESC LIMIT 200
+               price, size, status, filled_size, avg_fill_price, created_at
+        FROM orders ORDER BY created_at DESC LIMIT 200
     """)
-
     if df.empty:
-        st.info("No orders placed yet.")
+        st.info("⚠  NO ORDERS PLACED YET")
         return
 
-    # Status breakdown
-    status_counts = df["status"].value_counts()
-    col1, col2, col3, col4 = st.columns(4)
-    for col, (status, count) in zip([col1, col2, col3, col4], status_counts.items()):
+    sc = df["status"].value_counts()
+    cols = st.columns(min(4, len(sc)))
+    for col, (s, n) in zip(cols, sc.items()):
         with col:
-            st.metric(status.capitalize(), count)
+            st.metric(s.upper(), n)
 
-    # Orders table
     df["fill_pct"] = (df["filled_size"] / df["size"].replace(0, 1) * 100).round(1)
     st.dataframe(
         df[["condition_id", "side", "order_type", "price", "size",
             "status", "fill_pct", "created_at"]],
-        use_container_width=True,
-        height=400,
+        use_container_width=True, height=400,
     )
 
-    # Status pie
     fig = px.pie(
-        values=status_counts.values,
-        names=status_counts.index,
-        title="Order Status Distribution",
-        template="plotly_dark",
+        values=sc.values, names=sc.index,
+        color_discrete_sequence=[c["accent"], c["warning"], c["danger"], c["accent2"]],
     )
-    st.plotly_chart(fig, use_container_width=True)
+    st.plotly_chart(_fig(fig, "Order Status Distribution", 300), use_container_width=True)
 
 
-# ---------------------------------------------------------------------------
-# Risk page
-# ---------------------------------------------------------------------------
-
+# ── risk ─────────────────────────────────────────────────────────────────────
 def render_risk():
-    st.header("Risk Monitor")
+    term_header("Risk Monitor")
+    c = T()
 
-    port_df = query_df("""
-        SELECT * FROM portfolio_snapshots ORDER BY timestamp DESC LIMIT 1
-    """)
-
-    if port_df.empty:
-        st.info("No portfolio data yet.")
+    df = qdf("SELECT * FROM portfolio_snapshots ORDER BY timestamp DESC LIMIT 1")
+    if df.empty:
+        st.info("⚠  NO PORTFOLIO DATA YET")
         return
 
-    latest = port_df.iloc[0]
-    bankroll = float(latest["total_value"])
+    lat      = df.iloc[0]
+    bankroll = float(lat["total_value"])
+    exposure = float(lat["invested"]) / max(bankroll, 1)
+    dd       = float(lat["drawdown"])
+    daily    = float(lat["daily_pnl"]) / max(bankroll, 1)
 
-    col1, col2, col3 = st.columns(3)
-    with col1:
-        exposure = float(latest["invested"]) / max(bankroll, 1)
-        color = "normal" if exposure < 0.6 else "inverse"
-        st.metric("Portfolio Exposure", f"{exposure:.1%}", delta_color=color)
-    with col2:
-        dd = float(latest["drawdown"])
-        st.metric("Current Drawdown", f"{dd:.2%}",
-                  delta=f"{'HALTED' if dd > 0.20 else 'OK'}",
-                  delta_color="inverse" if dd > 0.10 else "normal")
-    with col3:
-        daily_pnl = float(latest["daily_pnl"])
-        daily_pct = daily_pnl / max(bankroll, 1)
-        st.metric("Daily P&L %", f"{daily_pct:.2%}", delta=f"${daily_pnl:+.2f}")
+    c1, c2, c3 = st.columns(3)
+    with c1: st.metric("PORTFOLIO EXPOSURE", f"{exposure:.1%}", delta_color="normal" if exposure < 0.6 else "inverse")
+    with c2: st.metric("CURRENT DRAWDOWN",   f"{dd:.2%}", delta="HALTED" if dd > 0.20 else "OK", delta_color="inverse" if dd > 0.10 else "normal")
+    with c3: st.metric("DAILY P&L %",        f"{daily:.2%}", delta=f"${float(lat['daily_pnl']):+.2f}")
 
-    # Exposure gauge
+    safe_bg = "#0a1a0a" if st.session_state.theme == "dark" else "#dde8cc"
     fig = go.Figure(go.Indicator(
         mode="gauge+number",
         value=exposure * 100,
-        title={"text": "Portfolio Exposure (%)"},
+        title={"text": "PORTFOLIO EXPOSURE (%)",
+               "font": {"family": "VT323,monospace", "color": c["text"]}},
+        number={"font": {"family": "VT323,monospace", "color": c["text"]}},
         gauge={
-            "axis": {"range": [0, 100]},
-            "bar": {"color": "#00d4aa"},
+            "axis": {"range": [0, 100], "tickcolor": c["text_dim"]},
+            "bar":  {"color": c["accent"]},
+            "bgcolor": safe_bg,
             "steps": [
-                {"range": [0, 60], "color": "#1a1a2e"},
-                {"range": [60, 80], "color": "#ffa726"},
-                {"range": [80, 100], "color": "#ff4b4b"},
+                {"range": [0,  60], "color": safe_bg},
+                {"range": [60, 80], "color": f"{c['warning']}44"},
+                {"range": [80, 100],"color": f"{c['danger']}44"},
             ],
             "threshold": {
-                "line": {"color": "white", "width": 4},
-                "thickness": 0.75,
-                "value": 80,
+                "line": {"color": c["warning"], "width": 3},
+                "thickness": 0.75, "value": 80,
             },
         },
     ))
-    fig.update_layout(template="plotly_dark", height=300)
-    st.plotly_chart(fig, use_container_width=True)
+    st.plotly_chart(_fig(fig, "Exposure Gauge", 320), use_container_width=True)
 
 
-# ---------------------------------------------------------------------------
-# Backtest page
-# ---------------------------------------------------------------------------
-
+# ── backtest ─────────────────────────────────────────────────────────────────
 def render_backtest():
-    st.header("Backtest Results")
+    term_header("Backtest Results")
+    c = T()
 
-    # Look for latest backtest results JSON
-    results_path = Path("data/backtest_results.json")
-    if not results_path.exists():
-        st.info("No backtest results found. Run: `python scripts/run_backtest.py`")
+    path = Path("data/backtest_results.json")
+    if not path.exists():
+        st.info("⚠  NO BACKTEST RESULTS — RUN: python scripts/run_backtest.py")
         return
 
-    with open(results_path) as f:
-        data = json.load(f)
+    data = json.loads(path.read_text())
+    m    = data.get("metrics", {})
+    mc   = data.get("monte_carlo", {})
 
-    m = data.get("metrics", {})
-    mc = data.get("monte_carlo", {})
-
-    col1, col2, col3, col4, col5 = st.columns(5)
-    with col1:
-        st.metric("Total Return", f"{m.get('total_return', 0):.1%}")
-    with col2:
-        st.metric("Sharpe Ratio", f"{m.get('sharpe_ratio', 0):.3f}")
-    with col3:
-        st.metric("Max Drawdown", f"{m.get('max_drawdown', 0):.1%}")
-    with col4:
-        st.metric("Win Rate", f"{m.get('win_rate', 0):.1%}")
-    with col5:
-        st.metric("Brier Score", f"{m.get('brier_score', 0):.4f}")
+    c1, c2, c3, c4, c5 = st.columns(5)
+    with c1: st.metric("TOTAL RETURN", f"{m.get('total_return',0):.1%}")
+    with c2: st.metric("SHARPE",       f"{m.get('sharpe_ratio',0):.3f}")
+    with c3: st.metric("MAX DD",       f"{m.get('max_drawdown',0):.1%}")
+    with c4: st.metric("WIN RATE",     f"{m.get('win_rate',0):.1%}")
+    with c5: st.metric("BRIER",        f"{m.get('brier_score',0):.4f}")
 
     st.divider()
 
-    # Equity curve from backtest
     eq = m.get("equity_curve", [])
     if eq:
         fig = go.Figure()
         fig.add_trace(go.Scatter(
-            y=eq, mode="lines", name="Backtest Equity",
-            line=dict(color="#00d4aa", width=2),
+            y=eq, mode="lines", name="BT_EQUITY",
+            line=dict(color=c["accent"], width=2),
+            fill="tozeroy", fillcolor=f"{c['accent']}18",
         ))
-        fig.update_layout(
-            title="Backtest Equity Curve",
-            template="plotly_dark", height=350,
-        )
-        st.plotly_chart(fig, use_container_width=True)
+        st.plotly_chart(_fig(fig, "Backtest Equity Curve", 350), use_container_width=True)
 
-    # Monte Carlo fan chart
     if mc:
-        st.subheader("Monte Carlo Confidence Intervals")
-        col_a, col_b, col_c = st.columns(3)
-        with col_a:
-            st.metric("Median Final Equity", f"${mc.get('equity_p50', 0):,.0f}")
-        with col_b:
-            st.metric("90th Pct Final Equity", f"${mc.get('equity_p90', 0):,.0f}")
-        with col_c:
-            st.metric("Prob. of Ruin", f"{mc.get('prob_ruin', 0):.1%}")
+        term_header("Monte Carlo Confidence Intervals", level=2)
+        ca, cb, cc = st.columns(3)
+        with ca: st.metric("MEDIAN EQUITY", f"${mc.get('equity_p50',0):,.0f}")
+        with cb: st.metric("P90 EQUITY",    f"${mc.get('equity_p90',0):,.0f}")
+        with cc: st.metric("PROB RUIN",     f"{mc.get('prob_ruin',0):.1%}")
 
     st.json(data.get("config", {}))
 
 
-# ---------------------------------------------------------------------------
-# Main
-# ---------------------------------------------------------------------------
-
+# ── main ─────────────────────────────────────────────────────────────────────
 def main():
+    inject_css()
     page, refresh = render_sidebar()
 
-    if page == "Portfolio":
-        render_portfolio()
-    elif page == "Markets":
-        render_markets()
-    elif page == "Predictions":
-        render_predictions()
-    elif page == "Orders":
-        render_orders()
-    elif page == "Risk":
-        render_risk()
-    elif page == "Backtest":
-        render_backtest()
+    routes = {
+        "PORTFOLIO":   render_portfolio,
+        "MARKETS":     render_markets,
+        "PREDICTIONS": render_predictions,
+        "ORDERS":      render_orders,
+        "RISK":        render_risk,
+        "BACKTEST":    render_backtest,
+    }
+    routes.get(page, render_portfolio)()
 
-    # Auto-refresh
     time.sleep(refresh)
     st.rerun()
 
