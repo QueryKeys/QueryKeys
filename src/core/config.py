@@ -81,10 +81,10 @@ class ScannerSettings(BaseModel):
 
 
 class LLMSettings(BaseModel):
-    model: str = "claude-opus-4-7"
+    model: str = "llama-3.3-70b-versatile"
     max_tokens: int = 1024
     temperature: float = 0.1
-    fallback_model: str = "claude-sonnet-4-6"
+    fallback_model: str = "mixtral-8x7b-32768"
     cache_ttl: int = 3600
 
 
@@ -188,12 +188,14 @@ class Settings(BaseModel):
     rate_limits: RateLimitSettings = Field(default_factory=RateLimitSettings)
 
     # Runtime extras injected after load
+    groq_api_key: str = ""
     anthropic_api_key: str = ""
     openai_api_key: str = ""
     news_api_key: str = ""
 
     @model_validator(mode="after")
     def inject_runtime_env(self) -> "Settings":
+        self.groq_api_key = os.getenv("GROQ_API_KEY", "")
         self.anthropic_api_key = os.getenv("ANTHROPIC_API_KEY", "")
         self.openai_api_key = os.getenv("OPENAI_API_KEY", "")
         self.news_api_key = os.getenv("NEWS_API_KEY", "")

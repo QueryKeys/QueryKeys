@@ -106,17 +106,17 @@ class LLMPredictor:
         )
 
     async def init(self) -> None:
-        if not self._settings.anthropic_api_key:
-            log.warning("llm_predictor.no_anthropic_key_llm_disabled")
+        if not self._settings.groq_api_key:
+            log.warning("llm_predictor.no_groq_key_llm_disabled")
             return
         try:
-            import anthropic
-            self._client = anthropic.AsyncAnthropic(
-                api_key=self._settings.anthropic_api_key
+            import groq
+            self._client = groq.AsyncGroq(
+                api_key=self._settings.groq_api_key
             )
             log.info("llm_predictor.initialized", model=self._settings.prediction.llm.model)
         except ImportError:
-            log.warning("llm_predictor.anthropic_not_installed")
+            log.warning("llm_predictor.groq_not_installed")
 
     async def predict(
         self,
@@ -184,37 +184,22 @@ class LLMPredictor:
         )
 
         messages = [
-            {
-                "role": "user",
-                "content": [
-                    {
-                        "type": "text",
-                        "text": user_content,
-                        # Enable prompt caching for system-level context
-                    }
-                ],
-            }
-        ]
-
-        system_with_cache = [
-            {
-                "type": "text",
-                "text": SYSTEM_PROMPT,
-                "cache_control": {"type": "ephemeral"},
-            }
+            {"role": "user", "content": user_content},
         ]
 
         for attempt in range(3):
             try:
-                response = await self._client.messages.create(
+                response = await self._client.chat.completions.create(
                     model=cfg.model,
                     max_tokens=cfg.max_tokens,
                     temperature=cfg.temperature,
-                    system=system_with_cache,
-                    messages=messages,
+                    messages=[
+                        {"role": "system", "content": SYSTEM_PROMPT},
+                        *messages,
+                    ],
                 )
-                raw_text = response.content[0].text.strip()
-                tokens_used = response.usage.input_tokens + response.usage.output_tokens
+                raw_text = response.choices[0].message.content.strip()
+                tokens_used = response.usage.total_tokens
 
                 parsed = self._parse_response(raw_text, market_price)
                 parsed.model_used = cfg.model
@@ -226,7 +211,6 @@ class LLMPredictor:
                     probability=parsed.probability,
                     market_price=market_price,
                     edge=parsed.probability - market_price,
-                    cached_tokens=getattr(response.usage, "cache_read_input_tokens", 0),
                 )
                 return parsed
 

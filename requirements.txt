@@ -39,8 +39,8 @@ numpy>=1.26.4
 pandas>=2.2.0
 scipy>=1.12.0
 
-# ---- LLM / Anthropic Claude --------------------------------
-anthropic>=0.25.0          # Claude API with prompt caching
+# ---- LLM / Groq (free tier — get key at console.groq.com) -
+groq>=0.9.0                # Groq API: Llama 3.3 70B, Mixtral
 
 # ---- Sentiment Analysis ------------------------------------
 vaderSentiment>=3.3.2

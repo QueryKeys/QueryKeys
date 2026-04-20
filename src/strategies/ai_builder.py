@@ -23,7 +23,7 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any, Dict, List, Optional
 
-import anthropic
+import groq
 
 from src.core.config import Settings
 from src.core.logging import get_logger
@@ -180,7 +180,7 @@ class AIStrategyBuilder:
 
     def __init__(self, settings: Settings) -> None:
         self._settings = settings
-        self._client = anthropic.AsyncAnthropic(api_key=settings.anthropic_api_key)
+        self._client = groq.AsyncGroq(api_key=settings.groq_api_key)
         self._model = settings.prediction.llm.model
         self._GENERATED_DIR.mkdir(parents=True, exist_ok=True)
         _init_file = self._GENERATED_DIR / "__init__.py"
@@ -242,22 +242,16 @@ class AIStrategyBuilder:
     async def _call_claude(self, context: MarketContext) -> Optional[str]:
         for attempt in range(3):
             try:
-                response = await self._client.messages.create(
+                response = await self._client.chat.completions.create(
                     model=self._model,
                     max_tokens=2048,
-                    system=[
-                        {
-                            "type": "text",
-                            "text": _SYSTEM_PROMPT,
-                            "cache_control": {"type": "ephemeral"},
-                        }
-                    ],
                     messages=[
-                        {"role": "user", "content": _build_user_prompt(context)}
+                        {"role": "system", "content": _SYSTEM_PROMPT},
+                        {"role": "user", "content": _build_user_prompt(context)},
                     ],
                 )
-                return response.content[0].text
-            except anthropic.RateLimitError:
+                return response.choices[0].message.content
+            except groq.RateLimitError:
                 wait = 2 ** attempt * 5
                 log.warning("ai_builder.rate_limited", wait=wait)
                 await asyncio.sleep(wait)
