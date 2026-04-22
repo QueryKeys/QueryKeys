@@ -245,10 +245,8 @@ class Backtester:
 
         for cid, snaps in market_snaps.items():
             snaps.sort(key=lambda x: x.get("timestamp", ""))
-            if len(snaps) < 2:
-                continue
 
-            # Use first snapshot as entry, last as exit
+            # Single-snapshot resolved markets are valid (entry == exit snapshot)
             entry_snap = snaps[0]
             exit_snap = snaps[-1]
 
