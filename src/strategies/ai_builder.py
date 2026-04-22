@@ -357,19 +357,20 @@ class AIStrategyBuilder:
     @staticmethod
     def _make_yaml_entry(name: str, data: Dict) -> str:
         module_path = f"src.strategies.generated.{name}"
-        # Find class name from code
         match = re.search(r"class\s+(\w+)\s*\(", data["code"])
         cls_name = match.group(1) if match else "GeneratedStrategy"
         params_lines = "\n".join(
             f"      {k}: {json.dumps(v)}" for k, v in data.get("params", {}).items()
         )
-        return textwrap.dedent(f"""\
-            - name: "{name}"
-              enabled: true
-              class: "{module_path}.{cls_name}"
-              params:
-            {params_lines if params_lines else '      {}'}
-        """)
+        params_block = params_lines if params_lines else "      {}"
+        return (
+            f"  - name: \"{name}\"\n"
+            f"    enabled: true\n"
+            f"    class: \"{module_path}.{cls_name}\"\n"
+            f"    params:\n"
+            f"{params_block}\n"
+            f"    markets: \"all\"\n"
+        )
 
     # ------------------------------------------------------------------
     # Context derivation from raw trade data
