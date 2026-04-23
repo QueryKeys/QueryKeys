@@ -1,6 +1,6 @@
 """
-QueryKeys — Retro Terminal Dashboard
-Phosphor-green CRT aesthetic with Dark / Light mode toggle.
+QueryKeys — לוח בקרה מסחרי מודרני
+עיצוב כהה מודרני עם תמיכה מלאה בעברית.
 Run: streamlit run src/monitoring/dashboard.py
 """
 
@@ -34,51 +34,51 @@ def rgba(hex_color: str, alpha: float) -> str:
 
 # ── page config (must be first Streamlit call) ──────────────────────────────
 st.set_page_config(
-    page_title="QueryKeys // TERMINAL",
-    page_icon="⌨",
+    page_title="QueryKeys — לוח בקרה",
+    page_icon="📊",
     layout="wide",
     initial_sidebar_state="expanded",
 )
 
-# ── theme definitions ────────────────────────────────────────────────────────
+# ── ערכות צבעים ──────────────────────────────────────────────────────────────
 DARK = {
-    "bg":           "#0a0a0a",
-    "bg2":          "#0d1117",
-    "text":         "#00ff41",
-    "text_dim":     "#008f11",
-    "text_bright":  "#ccffcc",
-    "accent":       "#00ff41",
-    "accent2":      "#00d4aa",
-    "danger":       "#ff3333",
-    "warning":      "#ffaa00",
-    "border":       "#00ff41",
-    "card":         "#0a1a0a",
-    "plot_bg":      "#0a0a0a",
-    "plot_paper":   "#0d1117",
-    "plotly_tpl":   "plotly_dark",
-    "glow":         "#00ff41",
-    "scanline":     "rgba(0,255,65,0.03)",
-    "label":        "◉ DARK MODE",
+    "bg":          "#0f172a",
+    "bg2":         "#1e293b",
+    "bg3":         "#0f172a",
+    "text":        "#f1f5f9",
+    "text_dim":    "#94a3b8",
+    "text_bright": "#ffffff",
+    "accent":      "#6366f1",
+    "accent2":     "#22d3ee",
+    "success":     "#22c55e",
+    "danger":      "#ef4444",
+    "warning":     "#f59e0b",
+    "border":      "#334155",
+    "card":        "#1e293b",
+    "plot_bg":     "#1e293b",
+    "plot_paper":  "#0f172a",
+    "plotly_tpl":  "plotly_dark",
+    "label":       "🌙 מצב לילה",
 }
 
 LIGHT = {
-    "bg":           "#f0ede0",
-    "bg2":          "#e4e0cc",
-    "text":         "#1a4a1a",
-    "text_dim":     "#4a7a4a",
-    "text_bright":  "#0a200a",
-    "accent":       "#1a6a1a",
-    "accent2":      "#1a6644",
-    "danger":       "#cc1111",
-    "warning":      "#cc7700",
-    "border":       "#2a7a2a",
-    "card":         "#dde8cc",
-    "plot_bg":      "#f0ede0",
-    "plot_paper":   "#e4e0cc",
-    "plotly_tpl":   "plotly_white",
-    "glow":         "#2a7a2a",
-    "scanline":     "rgba(0,80,0,0.04)",
-    "label":        "◎ LIGHT MODE",
+    "bg":          "#f8fafc",
+    "bg2":         "#ffffff",
+    "bg3":         "#f1f5f9",
+    "text":        "#0f172a",
+    "text_dim":    "#64748b",
+    "text_bright": "#020617",
+    "accent":      "#4f46e5",
+    "accent2":     "#0891b2",
+    "success":     "#16a34a",
+    "danger":      "#dc2626",
+    "warning":     "#d97706",
+    "border":      "#e2e8f0",
+    "card":        "#ffffff",
+    "plot_bg":     "#ffffff",
+    "plot_paper":  "#f8fafc",
+    "plotly_tpl":  "plotly_white",
+    "label":       "☀️ מצב יום",
 }
 
 if "theme" not in st.session_state:
@@ -89,184 +89,136 @@ def T() -> dict:
     return DARK if st.session_state.theme == "dark" else LIGHT
 
 
-# ── CSS injection ────────────────────────────────────────────────────────────
+# ── CSS מודרני ────────────────────────────────────────────────────────────────
 def inject_css():
     c = T()
     st.markdown(f"""
 <style>
-@import url('https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=VT323:wght@400&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
 
-/* ── global ── */
 html, body, [class*="css"] {{
-    font-family: 'Share Tech Mono', 'Courier New', monospace !important;
+    font-family: 'Inter', sans-serif !important;
     background-color: {c['bg']} !important;
     color: {c['text']} !important;
+    direction: rtl;
 }}
 
-/* ── scanlines overlay ── */
-.main::before {{
-    content: "";
-    position: fixed;
-    top: 0; left: 0; width: 100%; height: 100%;
-    background: repeating-linear-gradient(
-        0deg,
-        {c['scanline']} 0px, {c['scanline']} 1px,
-        transparent 1px, transparent 3px
-    );
-    pointer-events: none;
-    z-index: 9999;
-}}
-
-/* ── vignette ── */
-.main::after {{
-    content: "";
-    position: fixed;
-    top: 0; left: 0; width: 100%; height: 100%;
-    background: radial-gradient(ellipse at center, transparent 60%, rgba(0,0,0,0.45) 100%);
-    pointer-events: none;
-    z-index: 9998;
-}}
-
-/* ── main content area ── */
 .main .block-container {{
     background-color: {c['bg']} !important;
     padding: 1.5rem 2rem !important;
+    max-width: 1400px;
 }}
 
-/* ── sidebar ── */
 [data-testid="stSidebar"] {{
     background-color: {c['bg2']} !important;
-    border-right: 1px solid {c['border']} !important;
-    box-shadow: 4px 0 24px {c['glow']}22 !important;
+    border-left: 1px solid {c['border']} !important;
+    border-right: none !important;
 }}
 [data-testid="stSidebar"] * {{
-    font-family: 'Share Tech Mono', monospace !important;
     color: {c['text']} !important;
+    direction: rtl;
 }}
 
-/* ── headers ── */
 h1, h2, h3, h4 {{
-    font-family: 'VT323', monospace !important;
-    color: {c['text']} !important;
-    text-shadow: 0 0 8px {c['glow']}99, 0 0 18px {c['glow']}44 !important;
-    letter-spacing: 4px !important;
-    text-transform: uppercase !important;
-    border-bottom: 1px solid {c['border']}55 !important;
-    padding-bottom: 6px !important;
+    font-family: 'Inter', sans-serif !important;
+    color: {c['text_bright']} !important;
+    font-weight: 700 !important;
+    letter-spacing: -0.5px !important;
+    border-bottom: 2px solid {c['accent']} !important;
+    padding-bottom: 8px !important;
+    margin-bottom: 16px !important;
 }}
 
-/* ── metric cards ── */
 [data-testid="metric-container"] {{
-    background-color: {c['card']} !important;
+    background: {c['card']} !important;
     border: 1px solid {c['border']} !important;
-    border-radius: 0 !important;
-    padding: 14px !important;
-    box-shadow: 0 0 12px {c['glow']}33, inset 0 0 8px {c['glow']}0d !important;
-    animation: pulse-glow 4s ease-in-out infinite !important;
+    border-radius: 12px !important;
+    padding: 16px !important;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.2) !important;
+    transition: box-shadow 0.2s !important;
+}}
+[data-testid="metric-container"]:hover {{
+    box-shadow: 0 4px 12px rgba(99,102,241,0.25) !important;
 }}
 [data-testid="stMetricLabel"] > div {{
     color: {c['text_dim']} !important;
-    font-size: 0.72rem !important;
-    letter-spacing: 3px !important;
+    font-size: 0.75rem !important;
+    font-weight: 500 !important;
     text-transform: uppercase !important;
+    letter-spacing: 0.5px !important;
 }}
 [data-testid="stMetricValue"] > div {{
-    font-family: 'VT323', monospace !important;
-    font-size: 2.1rem !important;
+    font-size: 1.8rem !important;
+    font-weight: 700 !important;
     color: {c['text_bright']} !important;
-    text-shadow: 0 0 10px {c['glow']}bb !important;
 }}
 [data-testid="stMetricDelta"] svg {{ display: none !important; }}
 [data-testid="stMetricDelta"] > div {{
-    color: {c['accent2']} !important;
-    font-size: 0.72rem !important;
-    letter-spacing: 1px !important;
+    font-size: 0.8rem !important;
+    font-weight: 500 !important;
 }}
 
-/* ── buttons ── */
 .stButton > button {{
-    background: transparent !important;
-    border: 1px solid {c['border']} !important;
-    color: {c['text']} !important;
-    font-family: 'Share Tech Mono', monospace !important;
-    border-radius: 0 !important;
-    letter-spacing: 2px !important;
-    text-transform: uppercase !important;
-    box-shadow: 0 0 8px {c['glow']}44 !important;
-    transition: all 0.15s !important;
+    background: {c['accent']} !important;
+    border: none !important;
+    color: #ffffff !important;
+    font-family: 'Inter', sans-serif !important;
+    font-weight: 600 !important;
+    border-radius: 8px !important;
+    padding: 0.4rem 1rem !important;
+    transition: opacity 0.15s !important;
 }}
 .stButton > button:hover {{
-    background: {c['accent']}22 !important;
-    box-shadow: 0 0 18px {c['glow']}99 !important;
-    color: {c['text_bright']} !important;
+    opacity: 0.85 !important;
 }}
 
-/* ── selectbox / checkbox ── */
-.stSelectbox > div > div,
-.stCheckbox > label {{
+.stSelectbox > div > div {{
     background-color: {c['card']} !important;
-    border: 1px solid {c['border']}88 !important;
-    border-radius: 0 !important;
+    border: 1px solid {c['border']} !important;
+    border-radius: 8px !important;
     color: {c['text']} !important;
 }}
 
-/* ── dataframe ── */
 [data-testid="stDataFrame"] {{
-    border: 1px solid {c['border']}66 !important;
-    box-shadow: 0 0 12px {c['glow']}22 !important;
+    border: 1px solid {c['border']} !important;
+    border-radius: 8px !important;
+    overflow: hidden !important;
 }}
 
-/* ── divider ── */
 hr {{
-    border-color: {c['border']}55 !important;
-    box-shadow: 0 0 6px {c['glow']}44 !important;
+    border-color: {c['border']} !important;
+    margin: 12px 0 !important;
 }}
 
-/* ── info / alert ── */
 .stAlert {{
     background-color: {c['card']} !important;
-    border: 1px solid {c['border']}88 !important;
-    border-radius: 0 !important;
+    border: 1px solid {c['border']} !important;
+    border-radius: 8px !important;
 }}
 
-/* ── radio ── */
-[data-testid="stRadio"] label {{
-    font-family: 'Share Tech Mono', monospace !important;
-}}
-
-/* ── json ── */
 .stJson {{
     background-color: {c['card']} !important;
-    border: 1px solid {c['border']}44 !important;
-    font-family: 'Share Tech Mono', monospace !important;
-    font-size: 0.8rem !important;
+    border-radius: 8px !important;
+    border: 1px solid {c['border']} !important;
 }}
 
-/* ── scrollbar ── */
-::-webkit-scrollbar {{ width: 5px; }}
+::-webkit-scrollbar {{ width: 6px; }}
 ::-webkit-scrollbar-track {{ background: {c['bg']}; }}
-::-webkit-scrollbar-thumb {{ background: {c['border']}55; }}
-::-webkit-scrollbar-thumb:hover {{ background: {c['border']}; }}
+::-webkit-scrollbar-thumb {{ background: {c['border']}; border-radius: 3px; }}
 
-/* ── blink cursor ── */
-@keyframes blink {{
-    0%, 100% {{ opacity: 1; }}
-    50% {{ opacity: 0; }}
-}}
-.cursor {{
-    display: inline-block;
-    width: 10px; height: 1.1em;
-    background: {c['text']};
-    animation: blink 1.1s step-start infinite;
-    vertical-align: text-bottom;
-    margin-left: 3px;
+/* כרטיס סטטוס */
+.status-card {{
+    background: {c['card']};
+    border: 1px solid {c['border']};
+    border-radius: 12px;
+    padding: 14px 16px;
+    margin: 6px 0;
 }}
 
-/* ── glow pulse on cards ── */
-@keyframes pulse-glow {{
-    0%, 100% {{ box-shadow: 0 0 8px {c['glow']}33, inset 0 0 6px {c['glow']}0d; }}
-    50%  {{ box-shadow: 0 0 20px {c['glow']}66, inset 0 0 12px {c['glow']}1a; }}
-}}
+/* תג מצב */
+.badge-online  {{ background: rgba(34,197,94,0.15);  color: #22c55e; border: 1px solid #22c55e44; padding: 3px 10px; border-radius: 999px; font-size: .75rem; font-weight: 600; }}
+.badge-offline {{ background: rgba(239,68,68,0.15);  color: #ef4444; border: 1px solid #ef444444; padding: 3px 10px; border-radius: 999px; font-size: .75rem; font-weight: 600; }}
+.badge-blitz   {{ background: rgba(245,158,11,0.15); color: #f59e0b; border: 1px solid #f59e0b44; padding: 3px 10px; border-radius: 999px; font-size: .75rem; font-weight: 600; }}
 </style>
 """, unsafe_allow_html=True)
 
@@ -343,31 +295,28 @@ def set_strategy_enabled(name: str, enabled: bool) -> None:
     STRATEGIES_YAML.write_text("\n".join(result))
 
 
-# ── UI helpers ───────────────────────────────────────────────────────────────
-def term_header(title: str, level: int = 1):
+# ── עוזרי ממשק ──────────────────────────────────────────────────────────────
+def page_header(title: str, subtitle: str = ""):
     c = T()
-    tag = f"h{level}"
-    prefix = "██" if level == 1 else "▶▶"
     st.markdown(
-        f"<{tag} style='font-family:VT323,monospace;color:{c['text']};"
-        f"text-shadow:0 0 10px {c['glow']}99;letter-spacing:4px;"
-        f"border-bottom:1px solid {c['border']}55;padding-bottom:6px;'>"
-        f"{prefix} {title.upper()} <span class='cursor'></span></{tag}>",
+        f"<div style='margin-bottom:20px'>"
+        f"<h2 style='margin:0;font-size:1.5rem'>{title}</h2>"
+        + (f"<p style='color:{c['text_dim']};margin:4px 0 0;font-size:.85rem'>{subtitle}</p>" if subtitle else "")
+        + "</div>",
         unsafe_allow_html=True,
     )
 
 
-def status_bar(pairs: list[tuple[str, str]]):
+def kpi_bar(pairs: list[tuple[str, str]]):
     c = T()
-    cells = "  │  ".join(
-        f"<span style='color:{c['text_dim']}'>{k}:</span>"
-        f"<span style='color:{c['text_bright']};margin-left:4px'>{v}</span>"
+    cells = "  ·  ".join(
+        f"<span style='color:{c['text_dim']};font-size:.8rem'>{k}:</span> "
+        f"<span style='color:{c['text_bright']};font-weight:600;font-size:.85rem'>{v}</span>"
         for k, v in pairs
     )
     st.markdown(
-        f"<div style='font-family:Share Tech Mono,monospace;font-size:.78rem;"
-        f"padding:6px 12px;background:{c['card']};border:1px solid {c['border']}44;"
-        f"margin-bottom:14px;letter-spacing:1px;'>▸ {cells}</div>",
+        f"<div style='background:{c['card']};border:1px solid {c['border']};"
+        f"border-radius:8px;padding:10px 16px;margin-bottom:16px'>{cells}</div>",
         unsafe_allow_html=True,
     )
 
@@ -375,138 +324,113 @@ def status_bar(pairs: list[tuple[str, str]]):
 def _fig(fig: go.Figure, title: str, h: int = 350) -> go.Figure:
     c = T()
     fig.update_layout(
-        title=dict(
-            text=f"▶  {title.upper()}",
-            font=dict(family="VT323,monospace", size=20, color=c["text"]),
-        ),
+        title=dict(text=title, font=dict(family="Inter,sans-serif", size=14, color=c["text_dim"])),
         template=c["plotly_tpl"],
         height=h,
         paper_bgcolor=c["plot_paper"],
         plot_bgcolor=c["plot_bg"],
-        font=dict(family="Share Tech Mono,monospace", color=c["text"]),
-        xaxis=dict(gridcolor=rgba(c["border"], 0.1), linecolor=rgba(c["border"], 0.33)),
-        yaxis=dict(gridcolor=rgba(c["border"], 0.1), linecolor=rgba(c["border"], 0.33)),
-        margin=dict(l=40, r=20, t=50, b=40),
+        font=dict(family="Inter,sans-serif", color=c["text"]),
+        xaxis=dict(gridcolor=rgba(c["border"], 0.3), linecolor=rgba(c["border"], 0.5)),
+        yaxis=dict(gridcolor=rgba(c["border"], 0.3), linecolor=rgba(c["border"], 0.5)),
+        margin=dict(l=40, r=20, t=45, b=40),
     )
     return fig
 
 
-# ── sidebar ──────────────────────────────────────────────────────────────────
+# ── סיידבר ───────────────────────────────────────────────────────────────────
 def render_sidebar():
     c = T()
     with st.sidebar:
-        # ASCII logo
+        # לוגו + כותרת
         st.markdown(
-            f"<pre style='color:{c['text']};font-size:.65rem;line-height:1.25;"
-            f"text-shadow:0 0 8px {c['glow']}88;text-align:center;margin:0 0 4px;'>"
-            " ██████  ██   ██\n"
-            "██    ██ ██  ██ \n"
-            "██    ██ █████  \n"
-            "██ ▄▄ ██ ██  ██ \n"
-            " ██████  ██   ██\n"
-            "    ▀▀           </pre>",
+            f"<div style='text-align:center;padding:16px 0 8px'>"
+            f"<div style='font-size:1.6rem;font-weight:800;color:{c['text_bright']}'>QueryKeys</div>"
+            f"<div style='font-size:.75rem;color:{c['text_dim']};margin-top:2px'>לוח בקרה מסחרי · v1.0</div>"
+            f"</div>",
             unsafe_allow_html=True,
         )
-        st.markdown(
-            f"<div style='text-align:center;font-size:.68rem;letter-spacing:3px;"
-            f"color:{c['text_dim']};margin-bottom:10px'>QUERYKEYS v1.0.0</div>",
-            unsafe_allow_html=True,
-        )
-        st.markdown(f"<hr style='border-color:{c['border']}44;margin:6px 0'>", unsafe_allow_html=True)
+        st.divider()
 
-        # theme toggle
+        # מצב תצוגה
         ca, cb = st.columns(2)
         with ca:
-            if st.button("◐ DARK", use_container_width=True):
-                st.session_state.theme = "dark"
-                st.rerun()
+            if st.button("🌙 לילה", use_container_width=True):
+                st.session_state.theme = "dark"; st.rerun()
         with cb:
-            if st.button("◑ LIGHT", use_container_width=True):
-                st.session_state.theme = "light"
-                st.rerun()
-        st.markdown(
-            f"<div style='text-align:center;font-size:.68rem;color:{c['text_dim']};"
-            f"margin:4px 0 8px'>{c['label']}</div>",
-            unsafe_allow_html=True,
-        )
+            if st.button("☀️ יום", use_container_width=True):
+                st.session_state.theme = "light"; st.rerun()
 
-        st.markdown(f"<hr style='border-color:{c['border']}44;margin:6px 0'>", unsafe_allow_html=True)
+        st.divider()
 
-        # bot status
+        # סטטוס הבוט
         bs = bot_status()
         running = bs["running"]
-        dot_col  = c["accent"] if running else c["danger"]
-        dot_anim = "animation:pulse-glow 1s ease-in-out infinite;" if running else ""
-        status_label = "ONLINE" if running else "OFFLINE"
-        mode = bs.get("mode", os.getenv("BOT_MODE", "paper")).upper()
+        badge_cls = "badge-online" if running else "badge-offline"
+        status_heb = "פעיל" if running else "לא פעיל"
+        mode_map = {"paper": "נייר", "live": "חי", "backtest": "בקטסט"}
+        mode_heb = mode_map.get(bs.get("mode", "paper"), bs.get("mode", "—"))
+        h = int(bs.get("uptime", 0) // 3600)
+        m = int((bs.get("uptime", 0) % 3600) // 60)
         st.markdown(
-            f"<div style='background:{c['card']};border:1px solid {dot_col}55;"
-            f"border-radius:4px;padding:8px 10px;margin:4px 0'>"
-            f"<div style='font-size:.9rem;font-weight:bold;letter-spacing:2px;"
-            f"color:{dot_col};text-shadow:0 0 8px {dot_col};{dot_anim}'>"
-            f"● BOT: {status_label}</div>"
-            f"<div style='font-size:.70rem;color:{c['text_dim']};margin-top:4px;line-height:1.7'>"
-            f"MODE&nbsp;&nbsp;&nbsp;: {mode}<br>"
-            f"UPTIME : {int(bs.get('uptime',0)//3600):02d}h {int((bs.get('uptime',0)%3600)//60):02d}m<br>"
-            f"TRADES : {bs.get('trades_today',0)} today<br>"
-            f"POS&nbsp;&nbsp;&nbsp;&nbsp;: {bs.get('open_positions',0)} open<br>"
-            f"LAST&nbsp;&nbsp;&nbsp;: {str(bs.get('last_scan','—'))[:19]}"
+            f"<div class='status-card'>"
+            f"<div style='display:flex;justify-content:space-between;align-items:center;margin-bottom:10px'>"
+            f"<span style='font-weight:600;font-size:.9rem'>🤖 סטטוס הבוט</span>"
+            f"<span class='{badge_cls}'>{status_heb}</span></div>"
+            f"<div style='font-size:.78rem;color:{c['text_dim']};line-height:1.9'>"
+            f"<div>מצב: <strong style='color:{c['text']}'>{mode_heb}</strong></div>"
+            f"<div>זמן פעילות: <strong style='color:{c['text']}'>{h:02d}:{m:02d}</strong></div>"
+            f"<div>עסקאות היום: <strong style='color:{c['text']}'>{bs.get('trades_today', 0)}</strong></div>"
+            f"<div>פוזיציות פתוחות: <strong style='color:{c['text']}'>{bs.get('open_positions', 0)}</strong></div>"
+            f"<div style='color:{c['text_dim']};font-size:.72rem;margin-top:4px'>"
+            f"עדכון: {datetime.now().strftime('%H:%M:%S')}</div>"
             f"</div></div>",
             unsafe_allow_html=True,
         )
-        st.markdown(
-            f"<div style='font-size:.72rem;color:{c['text_dim']};padding:2px'>"
-            f"SYS_CLOCK: {datetime.now().strftime('%H:%M:%S')}</div>",
-            unsafe_allow_html=True,
-        )
 
-        st.markdown(f"<hr style='border-color:{c['border']}44;margin:8px 0'>", unsafe_allow_html=True)
+        st.divider()
 
-        # ── Blitz mode toggle ──────────────────────────────────────────
+        # כפתור מצב בלץ
         blitz_on = strategy_enabled("high_conviction_blitz")
-        blitz_col = c["danger"] if blitz_on else c["text_dim"]
-        blitz_label = "⚡ BLITZ: ON" if blitz_on else "⚡ BLITZ: OFF"
+        blitz_label = "⚡ בלץ: פעיל" if blitz_on else "⚡ בלץ: כבוי"
         st.markdown(
-            f"<div style='font-size:.72rem;letter-spacing:1px;color:{c['text_dim']};margin-bottom:3px'>"
-            f"HIGH CONVICTION MODE</div>",
+            f"<div style='font-size:.78rem;font-weight:600;color:{c['text_dim']};margin-bottom:6px'>"
+            f"מצב השקעה אגרסיבי</div>",
             unsafe_allow_html=True,
         )
-        if st.button(
-            blitz_label,
-            use_container_width=True,
-            help="75% Kelly sizing, 25% max position. High risk/reward.",
-        ):
+        if st.button(blitz_label, use_container_width=True,
+                     help="Kelly 75%, פוזיציה מקסימלית 25%. סיכון גבוה."):
             set_strategy_enabled("high_conviction_blitz", not blitz_on)
             st.rerun()
-        risk_txt = "⚠ EXTREME RISK — account can wipe in 3 bad trades" if blitz_on else "Safe mode active"
+        risk_heb = "⚠️ סיכון קיצוני — 3 הפסדים יכולים למחוק את החשבון" if blitz_on else "✅ מצב בטוח פעיל"
+        risk_color = c["danger"] if blitz_on else c["success"]
         st.markdown(
-            f"<div style='font-size:.63rem;color:{blitz_col};margin-top:2px;margin-bottom:4px'>"
-            f"{risk_txt}</div>",
+            f"<div style='font-size:.7rem;color:{risk_color};margin-top:4px'>{risk_heb}</div>",
             unsafe_allow_html=True,
         )
 
-        st.markdown(f"<hr style='border-color:{c['border']}44;margin:8px 0'>", unsafe_allow_html=True)
-        refresh = st.slider("REFRESH (s)", 5, 60, 10)
-        st.markdown(f"<hr style='border-color:{c['border']}44;margin:8px 0'>", unsafe_allow_html=True)
+        st.divider()
+
+        refresh = st.slider("רענון (שניות)", 5, 60, 10)
+        st.divider()
 
         page = st.radio(
-            "NAV",
-            ["▸ PORTFOLIO", "▸ MARKETS", "▸ PREDICTIONS",
-             "▸ ORDERS", "▸ RISK", "▸ BACKTEST"],
+            "ניווט",
+            ["📊 פורטפוליו", "🌐 שווקים", "🔮 תחזיות",
+             "📋 הזמנות", "⚠️ סיכונים", "🔬 בקטסט"],
         )
-        page = page.replace("▸ ", "")
+        page = page.split(" ", 1)[1]  # strip emoji
 
     return page, refresh
 
 
-# ── portfolio ────────────────────────────────────────────────────────────────
+# ── פורטפוליו ────────────────────────────────────────────────────────────────
 def render_portfolio():
-    term_header("Portfolio Overview")
+    page_header("📊 סקירת תיק ההשקעות", "ביצועים בזמן אמת")
     c = T()
 
     df = qdf("SELECT * FROM portfolio_snapshots ORDER BY timestamp DESC LIMIT 1000")
     if df.empty:
-        st.info("⚠  NO PORTFOLIO DATA — START THE BOT TO BEGIN TRADING")
+        st.info("⚠️  אין נתוני תיק — הפעל את הבוט כדי להתחיל במסחר")
         _demo_portfolio()
         return
 
@@ -514,49 +438,49 @@ def render_portfolio():
     df = df.sort_values("timestamp")
     lat = df.iloc[-1]
 
-    status_bar([
-        ("TOTAL", f"${lat['total_value']:,.2f}"),
-        ("DAILY_PNL", f"${lat['daily_pnl']:+,.2f}"),
-        ("DRAWDOWN", f"{lat['drawdown']*100:.2f}%"),
-        ("CLOCK", datetime.now().strftime("%H:%M:%S")),
+    kpi_bar([
+        ("שווי כולל", f"${lat['total_value']:,.2f}"),
+        ("רווח/הפסד יומי", f"${lat['daily_pnl']:+,.2f}"),
+        ("ירידה מהשיא", f"{lat['drawdown']*100:.2f}%"),
+        ("עדכון", datetime.now().strftime("%H:%M:%S")),
     ])
 
     c1, c2, c3, c4, c5 = st.columns(5)
-    with c1: st.metric("TOTAL VALUE",  f"${lat['total_value']:,.2f}", f"${lat['daily_pnl']:+,.2f}")
-    with c2: st.metric("CASH",         f"${lat['cash']:,.2f}")
-    with c3: st.metric("INVESTED",     f"${lat['invested']:,.2f}")
-    with c4: st.metric("TOTAL P&L",    f"${lat['realized_pnl']:+,.2f}", f"${lat['unrealized_pnl']:+,.2f} unrlzd")
-    with c5: st.metric("DRAWDOWN",     f"{lat['drawdown']*100:.2f}%", delta_color="inverse")
+    with c1: st.metric("שווי כולל",       f"${lat['total_value']:,.2f}", f"${lat['daily_pnl']:+,.2f}")
+    with c2: st.metric("מזומן",           f"${lat['cash']:,.2f}")
+    with c3: st.metric("מושקע",           f"${lat['invested']:,.2f}")
+    with c4: st.metric("רווח/הפסד כולל", f"${lat['realized_pnl']:+,.2f}", f"${lat['unrealized_pnl']:+,.2f} לא ממומש")
+    with c5: st.metric("ירידה מהשיא",    f"{lat['drawdown']*100:.2f}%", delta_color="inverse")
 
     st.divider()
 
     fig = go.Figure()
     fig.add_trace(go.Scatter(
         x=df["timestamp"], y=df["total_value"],
-        mode="lines", name="EQUITY",
-        line=dict(color=c["accent"], width=2),
-        fill="tozeroy", fillcolor=rgba(c["accent"], 0.1),
+        mode="lines", name="הון עצמי",
+        line=dict(color=c["accent"], width=2.5),
+        fill="tozeroy", fillcolor=rgba(c["accent"], 0.08),
     ))
-    st.plotly_chart(_fig(fig, "Equity Curve", 350), use_container_width=True)
+    st.plotly_chart(_fig(fig, "עקומת ההון", 350), use_container_width=True)
 
     cl, cr = st.columns(2)
     with cl:
         fig2 = go.Figure()
         fig2.add_trace(go.Bar(
             x=df["timestamp"], y=df["daily_pnl"],
-            marker_color=[c["accent"] if v >= 0 else c["danger"] for v in df["daily_pnl"]],
-            name="DAILY P&L",
+            marker_color=[c["success"] if v >= 0 else c["danger"] for v in df["daily_pnl"]],
+            name="רווח/הפסד יומי",
         ))
-        st.plotly_chart(_fig(fig2, "Daily P&L", 280), use_container_width=True)
+        st.plotly_chart(_fig(fig2, "רווח/הפסד יומי", 280), use_container_width=True)
     with cr:
         fig3 = go.Figure()
         fig3.add_trace(go.Scatter(
             x=df["timestamp"], y=-df["drawdown"] * 100,
             mode="lines", fill="tozeroy",
-            line=dict(color=c["danger"]), fillcolor=rgba(c["danger"], 0.16),
-            name="DRAWDOWN",
+            line=dict(color=c["danger"], width=2), fillcolor=rgba(c["danger"], 0.12),
+            name="ירידה מהשיא",
         ))
-        st.plotly_chart(_fig(fig3, "Drawdown %", 280), use_container_width=True)
+        st.plotly_chart(_fig(fig3, "ירידה מהשיא (%)", 280), use_container_width=True)
 
 
 def _demo_portfolio():
@@ -567,16 +491,16 @@ def _demo_portfolio():
     fig = go.Figure()
     fig.add_trace(go.Scatter(
         x=dates, y=equity, mode="lines",
-        line=dict(color=c["accent"], width=2),
-        fill="tozeroy", fillcolor=rgba(c["accent"], 0.1),
-        name="DEMO",
+        line=dict(color=c["accent"], width=2.5),
+        fill="tozeroy", fillcolor=rgba(c["accent"], 0.08),
+        name="דמו",
     ))
-    st.plotly_chart(_fig(fig, "Demo Equity Curve (no live data)", 350), use_container_width=True)
+    st.plotly_chart(_fig(fig, "עקומת הון לדוגמה (אין נתונים חיים)", 350), use_container_width=True)
 
 
-# ── markets ──────────────────────────────────────────────────────────────────
+# ── שווקים ───────────────────────────────────────────────────────────────────
 def render_markets():
-    term_header("Active Markets")
+    page_header("🌐 שווקים פעילים", "שווקי Polymarket הנסרקים כעת")
     c = T()
 
     df = qdf("""
@@ -584,22 +508,22 @@ def render_markets():
         FROM markets WHERE active = 1 ORDER BY volume_24h DESC LIMIT 100
     """)
     if df.empty:
-        st.info("⚠  NO MARKETS SCANNED YET")
+        st.info("⚠️  אין שווקים — הבוט עוד לא סרק")
         return
 
     df["end_date"] = pd.to_datetime(df["end_date"])
-    df["DTE"] = (df["end_date"] - pd.Timestamp.now()).dt.days
+    df["ימים לסיום"] = (df["end_date"] - pd.Timestamp.now()).dt.days
     df["volume_24h"] = df["volume_24h"].apply(lambda x: f"${x:,.0f}")
     df["liquidity"]  = df["liquidity"].apply(lambda x: f"${x:,.0f}")
 
-    cats = ["ALL"] + sorted(df["category"].dropna().unique().tolist())
-    sel = st.selectbox("FILTER_CATEGORY", cats)
-    if sel != "ALL":
+    cats = ["הכל"] + sorted(df["category"].dropna().unique().tolist())
+    sel = st.selectbox("סנן לפי קטגוריה", cats)
+    if sel != "הכל":
         df = df[df["category"] == sel]
 
     st.dataframe(
-        df[["question", "category", "volume_24h", "liquidity", "DTE"]],
-        use_container_width=True, height=450,
+        df[["question", "category", "volume_24h", "liquidity", "ימים לסיום"]],
+        use_container_width=True, height=420,
     )
 
     cat_df = qdf("SELECT category, COUNT(*) as cnt FROM markets GROUP BY category")
@@ -607,13 +531,14 @@ def render_markets():
         fig = px.pie(
             cat_df, names="category", values="cnt",
             color_discrete_sequence=[c["accent"], c["accent2"], c["warning"], c["danger"]],
+            hole=0.4,
         )
-        st.plotly_chart(_fig(fig, "Markets by Category", 320), use_container_width=True)
+        st.plotly_chart(_fig(fig, "שווקים לפי קטגוריה", 320), use_container_width=True)
 
 
-# ── predictions ──────────────────────────────────────────────────────────────
+# ── תחזיות ───────────────────────────────────────────────────────────────────
 def render_predictions():
-    term_header("Ensemble Predictions")
+    page_header("🔮 תחזיות המודל", "ניתוח הרכב המודלים")
     c = T()
 
     df = qdf("""
@@ -625,38 +550,39 @@ def render_predictions():
         ORDER BY p.timestamp DESC LIMIT 200
     """)
     if df.empty:
-        st.info("⚠  NO PREDICTIONS YET")
+        st.info("⚠️  אין תחזיות עדיין")
         return
 
     df["timestamp"] = pd.to_datetime(df["timestamp"])
-    df["edge_pct"]  = (df["edge"] * 100).round(2)
+    df["יתרון (%)"]  = (df["edge"] * 100).round(2)
 
-    if st.checkbox("FILTER: EDGE > 2%", value=True):
+    if st.checkbox("סנן: יתרון > 2%", value=True):
         df = df[df["edge"].abs() > 0.02]
 
     col1, col2 = st.columns(2)
-    with col1: st.metric("AVG EDGE",       f"{df['edge_pct'].mean():.2f}%")
-    with col2: st.metric("AVG CONFIDENCE", f"{df['confidence'].mean():.2f}")
+    with col1: st.metric("יתרון ממוצע", f"{df['יתרון (%)'].mean():.2f}%")
+    with col2: st.metric("ביטחון ממוצע", f"{df['confidence'].mean():.2f}")
 
     fig = px.scatter(
         df, x="market_price", y="yes_probability",
-        color="edge_pct", size="confidence",
+        color="יתרון (%)", size="confidence",
         hover_data=["question", "category", "uncertainty"],
-        color_continuous_scale=[[0, c["danger"]], [0.5, c["warning"]], [1, c["accent"]]],
+        color_continuous_scale=[[0, c["danger"]], [0.5, c["warning"]], [1, c["success"]]],
+        labels={"market_price": "מחיר שוק", "yes_probability": "הסתברות המודל"},
     )
     fig.add_shape(type="line", x0=0, y0=0, x1=1, y1=1,
-                  line=dict(color=c["text_dim"], dash="dash"))
-    st.plotly_chart(_fig(fig, "Model Probability vs Market Price", 400), use_container_width=True)
+                  line=dict(color=c["text_dim"], dash="dash", width=1))
+    st.plotly_chart(_fig(fig, "הסתברות מודל מול מחיר שוק", 400), use_container_width=True)
     st.dataframe(
         df[["question", "category", "market_price", "yes_probability",
-            "edge_pct", "confidence", "uncertainty"]].head(50),
+            "יתרון (%)", "confidence", "uncertainty"]].head(50),
         use_container_width=True,
     )
 
 
-# ── orders ───────────────────────────────────────────────────────────────────
+# ── הזמנות ───────────────────────────────────────────────────────────────────
 def render_orders():
-    term_header("Order Management")
+    page_header("📋 ניהול הזמנות", "היסטוריית עסקאות")
     c = T()
 
     df = qdf("""
@@ -665,37 +591,40 @@ def render_orders():
         FROM orders ORDER BY created_at DESC LIMIT 200
     """)
     if df.empty:
-        st.info("⚠  NO ORDERS PLACED YET")
+        st.info("⚠️  אין הזמנות עדיין")
         return
 
+    status_heb = {"filled": "בוצעה", "open": "פתוחה", "cancelled": "בוטלה", "partial": "חלקית"}
     sc = df["status"].value_counts()
     cols = st.columns(min(4, len(sc)))
     for col, (s, n) in zip(cols, sc.items()):
         with col:
-            st.metric(s.upper(), n)
+            st.metric(status_heb.get(s, s), n)
 
-    df["fill_pct"] = (df["filled_size"] / df["size"].replace(0, 1) * 100).round(1)
+    df["אחוז מילוי"] = (df["filled_size"] / df["size"].replace(0, 1) * 100).round(1)
+    df["כיוון"] = df["side"].map({"YES": "✅ כן", "NO": "❌ לא"})
     st.dataframe(
-        df[["condition_id", "side", "order_type", "price", "size",
-            "status", "fill_pct", "created_at"]],
-        use_container_width=True, height=400,
+        df[["condition_id", "כיוון", "order_type", "price", "size",
+            "status", "אחוז מילוי", "created_at"]],
+        use_container_width=True, height=380,
     )
 
     fig = px.pie(
-        values=sc.values, names=sc.index,
-        color_discrete_sequence=[c["accent"], c["warning"], c["danger"], c["accent2"]],
+        values=sc.values, names=[status_heb.get(s, s) for s in sc.index],
+        color_discrete_sequence=[c["success"], c["warning"], c["danger"], c["accent2"]],
+        hole=0.4,
     )
-    st.plotly_chart(_fig(fig, "Order Status Distribution", 300), use_container_width=True)
+    st.plotly_chart(_fig(fig, "התפלגות סטטוס הזמנות", 300), use_container_width=True)
 
 
-# ── risk ─────────────────────────────────────────────────────────────────────
+# ── סיכונים ──────────────────────────────────────────────────────────────────
 def render_risk():
-    term_header("Risk Monitor")
+    page_header("⚠️ ניטור סיכונים", "חשיפה ומגבלות")
     c = T()
 
     df = qdf("SELECT * FROM portfolio_snapshots ORDER BY timestamp DESC LIMIT 1")
     if df.empty:
-        st.info("⚠  NO PORTFOLIO DATA YET")
+        st.info("⚠️  אין נתוני תיק עדיין")
         return
 
     lat      = df.iloc[0]
@@ -705,43 +634,38 @@ def render_risk():
     daily    = float(lat["daily_pnl"]) / max(bankroll, 1)
 
     c1, c2, c3 = st.columns(3)
-    with c1: st.metric("PORTFOLIO EXPOSURE", f"{exposure:.1%}", delta_color="normal" if exposure < 0.6 else "inverse")
-    with c2: st.metric("CURRENT DRAWDOWN",   f"{dd:.2%}", delta="HALTED" if dd > 0.20 else "OK", delta_color="inverse" if dd > 0.10 else "normal")
-    with c3: st.metric("DAILY P&L %",        f"{daily:.2%}", delta=f"${float(lat['daily_pnl']):+.2f}")
+    with c1: st.metric("חשיפת תיק",       f"{exposure:.1%}", delta_color="normal" if exposure < 0.6 else "inverse")
+    with c2: st.metric("ירידה נוכחית",    f"{dd:.2%}", delta="עצור" if dd > 0.20 else "תקין", delta_color="inverse" if dd > 0.10 else "normal")
+    with c3: st.metric("רווח/הפסד יומי %", f"{daily:.2%}", delta=f"${float(lat['daily_pnl']):+.2f}")
 
-    safe_bg = "#0a1a0a" if st.session_state.theme == "dark" else "#dde8cc"
     fig = go.Figure(go.Indicator(
         mode="gauge+number",
         value=exposure * 100,
-        title={"text": "PORTFOLIO EXPOSURE (%)",
-               "font": {"family": "VT323,monospace", "color": c["text"]}},
-        number={"font": {"family": "VT323,monospace", "color": c["text"]}},
+        title={"text": "חשיפת תיק (%)", "font": {"family": "Inter,sans-serif", "color": c["text"]}},
+        number={"font": {"family": "Inter,sans-serif", "color": c["text_bright"]}, "suffix": "%"},
         gauge={
             "axis": {"range": [0, 100], "tickcolor": c["text_dim"]},
             "bar":  {"color": c["accent"]},
-            "bgcolor": safe_bg,
+            "bgcolor": c["card"],
             "steps": [
-                {"range": [0,  60], "color": safe_bg},
-                {"range": [60, 80], "color": rgba(c["warning"], 0.27)},
-                {"range": [80, 100],"color": rgba(c["danger"], 0.27)},
+                {"range": [0,  60], "color": rgba(c["success"], 0.1)},
+                {"range": [60, 80], "color": rgba(c["warning"], 0.2)},
+                {"range": [80, 100],"color": rgba(c["danger"],  0.2)},
             ],
-            "threshold": {
-                "line": {"color": c["warning"], "width": 3},
-                "thickness": 0.75, "value": 80,
-            },
+            "threshold": {"line": {"color": c["danger"], "width": 3}, "thickness": 0.75, "value": 80},
         },
     ))
-    st.plotly_chart(_fig(fig, "Exposure Gauge", 320), use_container_width=True)
+    st.plotly_chart(_fig(fig, "מד חשיפת תיק", 320), use_container_width=True)
 
 
-# ── backtest ─────────────────────────────────────────────────────────────────
+# ── בקטסט ────────────────────────────────────────────────────────────────────
 def render_backtest():
-    term_header("Backtest Results")
+    page_header("🔬 בדיקה היסטורית", "תוצאות Backtesting + Monte Carlo")
     c = T()
 
     path = Path("data/backtest_results.json")
     if not path.exists():
-        st.info("⚠  NO BACKTEST RESULTS — RUN: python scripts/run_backtest.py")
+        st.info("⚠️  אין תוצאות — הרץ: python scripts/run_backtest.py")
         return
 
     data = json.loads(path.read_text())
@@ -749,11 +673,11 @@ def render_backtest():
     mc   = data.get("monte_carlo", {})
 
     c1, c2, c3, c4, c5 = st.columns(5)
-    with c1: st.metric("TOTAL RETURN", f"{m.get('total_return',0):.1%}")
-    with c2: st.metric("SHARPE",       f"{m.get('sharpe_ratio',0):.3f}")
-    with c3: st.metric("MAX DD",       f"{m.get('max_drawdown',0):.1%}")
-    with c4: st.metric("WIN RATE",     f"{m.get('win_rate',0):.1%}")
-    with c5: st.metric("BRIER",        f"{m.get('brier_score',0):.4f}")
+    with c1: st.metric("תשואה כוללת",  f"{m.get('total_return',0):.1%}")
+    with c2: st.metric("Sharpe",        f"{m.get('sharpe_ratio',0):.3f}")
+    with c3: st.metric("ירידה מקסימלית", f"{m.get('max_drawdown',0):.1%}")
+    with c4: st.metric("אחוז הצלחה",   f"{m.get('win_rate',0):.1%}")
+    with c5: st.metric("ציון Brier",    f"{m.get('brier_score',0):.4f}")
 
     st.divider()
 
@@ -761,34 +685,35 @@ def render_backtest():
     if eq:
         fig = go.Figure()
         fig.add_trace(go.Scatter(
-            y=eq, mode="lines", name="BT_EQUITY",
-            line=dict(color=c["accent"], width=2),
-            fill="tozeroy", fillcolor=rgba(c["accent"], 0.1),
+            y=eq, mode="lines", name="הון בקטסט",
+            line=dict(color=c["accent"], width=2.5),
+            fill="tozeroy", fillcolor=rgba(c["accent"], 0.08),
         ))
-        st.plotly_chart(_fig(fig, "Backtest Equity Curve", 350), use_container_width=True)
+        st.plotly_chart(_fig(fig, "עקומת הון — בדיקה היסטורית", 350), use_container_width=True)
 
     if mc:
-        term_header("Monte Carlo Confidence Intervals", level=2)
+        st.subheader("📈 Monte Carlo — רווחי ביטחון")
         ca, cb, cc = st.columns(3)
-        with ca: st.metric("MEDIAN EQUITY", f"${mc.get('equity_p50',0):,.0f}")
-        with cb: st.metric("P90 EQUITY",    f"${mc.get('equity_p90',0):,.0f}")
-        with cc: st.metric("PROB RUIN",     f"{mc.get('prob_ruin',0):.1%}")
+        with ca: st.metric("הון חציוני (P50)",  f"${mc.get('equity_p50',0):,.0f}")
+        with cb: st.metric("הון אופטימי (P90)", f"${mc.get('equity_p90',0):,.0f}")
+        with cc: st.metric("הסתברות פשיטת רגל", f"{mc.get('prob_ruin',0):.1%}")
 
+    st.subheader("⚙️ הגדרות הריצה")
     st.json(data.get("config", {}))
 
 
-# ── main ─────────────────────────────────────────────────────────────────────
+# ── ניתוב ראשי ───────────────────────────────────────────────────────────────
 def main():
     inject_css()
     page, refresh = render_sidebar()
 
     routes = {
-        "PORTFOLIO":   render_portfolio,
-        "MARKETS":     render_markets,
-        "PREDICTIONS": render_predictions,
-        "ORDERS":      render_orders,
-        "RISK":        render_risk,
-        "BACKTEST":    render_backtest,
+        "פורטפוליו":     render_portfolio,
+        "שווקים":        render_markets,
+        "תחזיות":        render_predictions,
+        "הזמנות":        render_orders,
+        "סיכונים":       render_risk,
+        "בקטסט":         render_backtest,
     }
     routes.get(page, render_portfolio)()
 

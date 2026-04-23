@@ -43,6 +43,17 @@ strategies:
       max_position_pct: 0.05
     markets: "all"
 
+  - name: "btc_5m"
+    enabled: true
+    class: "src.strategies.btc_5m.Btc5mStrategy"
+    params:
+      min_score_strength: 1.5     # min combined signal score (RSI+EMA+momentum)
+      max_atr_pct: 0.15           # skip if BTC is too volatile (>0.15% ATR)
+      min_vol_spike: 0.8          # volume must be >= 80% of 20-candle avg
+      base_position_pct: 0.04     # 4% bankroll base
+      max_position_pct: 0.08      # 8% max
+    markets: "Crypto"
+
   - name: "high_conviction_blitz"
     enabled: true
     class: "src.strategies.high_conviction_blitz.HighConvictionBlitzStrategy"
