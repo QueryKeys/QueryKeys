@@ -42,3 +42,18 @@ strategies:
       min_arb_edge: 0.02
       max_position_pct: 0.05
     markets: "all"
+
+  - name: "late_resolution_convergence"
+    enabled: true
+    class: "src.strategies.late_resolution_convergence.LateResolutionConvergenceStrategy"
+    params:
+      min_dte: 1
+      max_dte: 14
+      min_conviction: 0.68        # model_prob must exceed this toward YES or NO
+      min_price_gap: 0.07         # market price must lag model by at least 7%
+      min_confidence: 0.55
+      max_uncertainty: 0.12
+      min_net_edge: 0.03
+      base_position_pct: 0.06     # 6% bankroll base, scales up near expiry
+      max_position_pct: 0.10
+    markets: "all"
