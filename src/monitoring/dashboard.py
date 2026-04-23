@@ -8,6 +8,7 @@ from __future__ import annotations
 
 import json
 import os
+import re
 import time
 from datetime import datetime, timezone
 from pathlib import Path
@@ -15,6 +16,7 @@ from typing import Dict, Optional
 
 HEARTBEAT_FILE = Path("data/bot_heartbeat.json")
 HEARTBEAT_STALE_SECS = 30   # bot is considered dead if no update in 30s
+STRATEGIES_YAML = Path("config/strategies.yaml")
 
 import numpy as np
 import pandas as pd
@@ -310,6 +312,37 @@ def bot_status() -> dict:
         return {"running": False, "reason": "parse error"}
 
 
+def strategy_enabled(name: str) -> bool:
+    """Return True if the named strategy is enabled in strategies.yaml."""
+    if not STRATEGIES_YAML.exists():
+        return False
+    text = STRATEGIES_YAML.read_text()
+    # Find the block for this strategy and check its enabled flag
+    pattern = rf'name:\s*["\']?{re.escape(name)}["\']?.*?enabled:\s*(true|false)'
+    m = re.search(pattern, text, re.DOTALL | re.IGNORECASE)
+    return m.group(1).lower() == "true" if m else False
+
+
+def set_strategy_enabled(name: str, enabled: bool) -> None:
+    """Toggle enabled: true/false for a named strategy in strategies.yaml."""
+    if not STRATEGIES_YAML.exists():
+        return
+    text = STRATEGIES_YAML.read_text()
+    # Replace the enabled line within the named strategy's block only
+    # We do a two-pass: find the name anchor, then flip the next enabled line
+    lines = text.splitlines()
+    in_block = False
+    result = []
+    for line in lines:
+        if re.search(rf'name:\s*["\']?{re.escape(name)}["\']?', line):
+            in_block = True
+        if in_block and re.match(r'\s+enabled:\s*(true|false)', line):
+            line = re.sub(r'(enabled:\s*)(true|false)', f'\\g<1>{"true" if enabled else "false"}', line)
+            in_block = False  # only flip the first occurrence
+        result.append(line)
+    STRATEGIES_YAML.write_text("\n".join(result))
+
+
 # ── UI helpers ───────────────────────────────────────────────────────────────
 def term_header(title: str, level: int = 1):
     c = T()
@@ -424,6 +457,31 @@ def render_sidebar():
         st.markdown(
             f"<div style='font-size:.72rem;color:{c['text_dim']};padding:2px'>"
             f"SYS_CLOCK: {datetime.now().strftime('%H:%M:%S')}</div>",
+            unsafe_allow_html=True,
+        )
+
+        st.markdown(f"<hr style='border-color:{c['border']}44;margin:8px 0'>", unsafe_allow_html=True)
+
+        # ── Blitz mode toggle ──────────────────────────────────────────
+        blitz_on = strategy_enabled("high_conviction_blitz")
+        blitz_col = c["danger"] if blitz_on else c["text_dim"]
+        blitz_label = "⚡ BLITZ: ON" if blitz_on else "⚡ BLITZ: OFF"
+        st.markdown(
+            f"<div style='font-size:.72rem;letter-spacing:1px;color:{c['text_dim']};margin-bottom:3px'>"
+            f"HIGH CONVICTION MODE</div>",
+            unsafe_allow_html=True,
+        )
+        if st.button(
+            blitz_label,
+            use_container_width=True,
+            help="75% Kelly sizing, 25% max position. High risk/reward.",
+        ):
+            set_strategy_enabled("high_conviction_blitz", not blitz_on)
+            st.rerun()
+        risk_txt = "⚠ EXTREME RISK — account can wipe in 3 bad trades" if blitz_on else "Safe mode active"
+        st.markdown(
+            f"<div style='font-size:.63rem;color:{blitz_col};margin-top:2px;margin-bottom:4px'>"
+            f"{risk_txt}</div>",
             unsafe_allow_html=True,
         )
 
