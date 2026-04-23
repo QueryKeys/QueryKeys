@@ -42,43 +42,51 @@ st.set_page_config(
 
 # ── ערכות צבעים ──────────────────────────────────────────────────────────────
 DARK = {
-    "bg":          "#0f172a",
-    "bg2":         "#1e293b",
-    "bg3":         "#0f172a",
-    "text":        "#f1f5f9",
-    "text_dim":    "#94a3b8",
-    "text_bright": "#ffffff",
-    "accent":      "#6366f1",
-    "accent2":     "#22d3ee",
-    "success":     "#22c55e",
-    "danger":      "#ef4444",
-    "warning":     "#f59e0b",
-    "border":      "#334155",
-    "card":        "#1e293b",
-    "plot_bg":     "#1e293b",
-    "plot_paper":  "#0f172a",
+    "bg":          "#060B14",
+    "bg2":         "#0A1628",
+    "bg3":         "#0D1B2A",
+    "text":        "#E2E8F0",
+    "text_dim":    "#64748B",
+    "text_bright": "#F8FAFC",
+    "accent":      "#3B82F6",
+    "accent2":     "#8B5CF6",
+    "success":     "#10B981",
+    "danger":      "#F43F5E",
+    "warning":     "#F59E0B",
+    "border":      "#1E293B",
+    "border2":     "#2D3F55",
+    "card":        "#0F1E2E",
+    "card2":       "#132030",
+    "plot_bg":     "#0A1628",
+    "plot_paper":  "#060B14",
     "plotly_tpl":  "plotly_dark",
-    "label":       "🌙 מצב לילה",
+    "label":       "🌙 לילה",
+    "grad_start":  "#3B82F6",
+    "grad_end":    "#8B5CF6",
 }
 
 LIGHT = {
-    "bg":          "#f8fafc",
-    "bg2":         "#ffffff",
-    "bg3":         "#f1f5f9",
-    "text":        "#0f172a",
-    "text_dim":    "#64748b",
-    "text_bright": "#020617",
-    "accent":      "#4f46e5",
-    "accent2":     "#0891b2",
-    "success":     "#16a34a",
-    "danger":      "#dc2626",
-    "warning":     "#d97706",
-    "border":      "#e2e8f0",
-    "card":        "#ffffff",
-    "plot_bg":     "#ffffff",
-    "plot_paper":  "#f8fafc",
+    "bg":          "#F0F4F8",
+    "bg2":         "#FFFFFF",
+    "bg3":         "#E8EFF5",
+    "text":        "#1A202C",
+    "text_dim":    "#718096",
+    "text_bright": "#000000",
+    "accent":      "#2563EB",
+    "accent2":     "#7C3AED",
+    "success":     "#059669",
+    "danger":      "#E11D48",
+    "warning":     "#D97706",
+    "border":      "#CBD5E1",
+    "border2":     "#94A3B8",
+    "card":        "#FFFFFF",
+    "card2":       "#F8FAFC",
+    "plot_bg":     "#FFFFFF",
+    "plot_paper":  "#F0F4F8",
     "plotly_tpl":  "plotly_white",
-    "label":       "☀️ מצב יום",
+    "label":       "☀️ יום",
+    "grad_start":  "#2563EB",
+    "grad_end":    "#7C3AED",
 }
 
 if "theme" not in st.session_state:
@@ -89,136 +97,301 @@ def T() -> dict:
     return DARK if st.session_state.theme == "dark" else LIGHT
 
 
-# ── CSS מודרני ────────────────────────────────────────────────────────────────
+# ── CSS פרימיום ───────────────────────────────────────────────────────────────
 def inject_css():
     c = T()
+    is_dark = st.session_state.theme == "dark"
+    sidebar_bg = "linear-gradient(180deg, #0A1628 0%, #060B14 100%)" if is_dark else "linear-gradient(180deg, #FFFFFF 0%, #F0F4F8 100%)"
+    card_bg    = "linear-gradient(135deg, #0F1E2E 0%, #0A1628 100%)" if is_dark else "linear-gradient(135deg, #FFFFFF 0%, #F8FAFC 100%)"
+
     st.markdown(f"""
 <style>
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&family=Inter:wght@400;500;600&display=swap');
 
+/* ═══ בסיס ═══ */
 html, body, [class*="css"] {{
     font-family: 'Inter', sans-serif !important;
     background-color: {c['bg']} !important;
     color: {c['text']} !important;
     direction: rtl;
 }}
-
 .main .block-container {{
     background-color: {c['bg']} !important;
-    padding: 1.5rem 2rem !important;
-    max-width: 1400px;
+    padding: 1.8rem 2.5rem !important;
+    max-width: 1440px;
 }}
 
+/* ═══ סיידבר ═══ */
 [data-testid="stSidebar"] {{
-    background-color: {c['bg2']} !important;
-    border-left: 1px solid {c['border']} !important;
+    background: {sidebar_bg} !important;
+    border-left: 1px solid {c['border2']} !important;
     border-right: none !important;
 }}
 [data-testid="stSidebar"] * {{
-    color: {c['text']} !important;
     direction: rtl;
+    color: {c['text']} !important;
 }}
 
+/* ═══ כותרות ═══ */
 h1, h2, h3, h4 {{
-    font-family: 'Inter', sans-serif !important;
-    color: {c['text_bright']} !important;
+    font-family: 'Space Grotesk', sans-serif !important;
     font-weight: 700 !important;
-    letter-spacing: -0.5px !important;
-    border-bottom: 2px solid {c['accent']} !important;
-    padding-bottom: 8px !important;
-    margin-bottom: 16px !important;
+    letter-spacing: -0.8px !important;
+    color: {c['text_bright']} !important;
+    border: none !important;
+    margin-bottom: 0 !important;
+    padding-bottom: 0 !important;
 }}
 
+/* ═══ כרטיסי מדד ═══ */
 [data-testid="metric-container"] {{
-    background: {c['card']} !important;
+    background: {card_bg} !important;
     border: 1px solid {c['border']} !important;
-    border-radius: 12px !important;
-    padding: 16px !important;
-    box-shadow: 0 1px 3px rgba(0,0,0,0.2) !important;
-    transition: box-shadow 0.2s !important;
+    border-top: 2px solid {c['accent']} !important;
+    border-radius: 14px !important;
+    padding: 18px 20px !important;
+    box-shadow: 0 4px 24px rgba(0,0,0,0.25), 0 0 0 1px {c['border']} !important;
+    transition: all 0.25s ease !important;
+    position: relative !important;
+    overflow: hidden !important;
+}}
+[data-testid="metric-container"]::before {{
+    content: "";
+    position: absolute;
+    top: 0; left: 0; right: 0; height: 2px;
+    background: linear-gradient(90deg, {c['grad_start']}, {c['grad_end']});
+    border-radius: 14px 14px 0 0;
 }}
 [data-testid="metric-container"]:hover {{
-    box-shadow: 0 4px 12px rgba(99,102,241,0.25) !important;
+    transform: translateY(-2px) !important;
+    box-shadow: 0 8px 32px rgba(59,130,246,0.2), 0 0 0 1px {c['border2']} !important;
+    border-top-color: {c['accent2']} !important;
 }}
 [data-testid="stMetricLabel"] > div {{
+    font-family: 'Inter', sans-serif !important;
     color: {c['text_dim']} !important;
-    font-size: 0.75rem !important;
-    font-weight: 500 !important;
+    font-size: 0.72rem !important;
+    font-weight: 600 !important;
     text-transform: uppercase !important;
-    letter-spacing: 0.5px !important;
+    letter-spacing: 1px !important;
 }}
 [data-testid="stMetricValue"] > div {{
-    font-size: 1.8rem !important;
+    font-family: 'JetBrains Mono', monospace !important;
+    font-size: 1.9rem !important;
     font-weight: 700 !important;
     color: {c['text_bright']} !important;
+    letter-spacing: -1px !important;
+    line-height: 1.1 !important;
 }}
 [data-testid="stMetricDelta"] svg {{ display: none !important; }}
 [data-testid="stMetricDelta"] > div {{
-    font-size: 0.8rem !important;
+    font-family: 'JetBrains Mono', monospace !important;
+    font-size: 0.78rem !important;
     font-weight: 500 !important;
+    margin-top: 4px !important;
 }}
 
+/* ═══ כפתורים ═══ */
 .stButton > button {{
-    background: {c['accent']} !important;
+    background: linear-gradient(135deg, {c['grad_start']}, {c['grad_end']}) !important;
     border: none !important;
     color: #ffffff !important;
-    font-family: 'Inter', sans-serif !important;
+    font-family: 'Space Grotesk', sans-serif !important;
     font-weight: 600 !important;
-    border-radius: 8px !important;
-    padding: 0.4rem 1rem !important;
-    transition: opacity 0.15s !important;
+    font-size: 0.85rem !important;
+    border-radius: 10px !important;
+    padding: 0.45rem 1.2rem !important;
+    letter-spacing: 0.3px !important;
+    transition: all 0.2s ease !important;
+    box-shadow: 0 4px 12px rgba(59,130,246,0.35) !important;
 }}
 .stButton > button:hover {{
-    opacity: 0.85 !important;
+    transform: translateY(-1px) !important;
+    box-shadow: 0 6px 20px rgba(59,130,246,0.5) !important;
+    opacity: 0.95 !important;
+}}
+.stButton > button:active {{
+    transform: translateY(0) !important;
 }}
 
+/* ═══ סלקטבוקס ═══ */
 .stSelectbox > div > div {{
-    background-color: {c['card']} !important;
-    border: 1px solid {c['border']} !important;
-    border-radius: 8px !important;
+    background: {c['card']} !important;
+    border: 1px solid {c['border2']} !important;
+    border-radius: 10px !important;
     color: {c['text']} !important;
+    font-family: 'Inter', sans-serif !important;
 }}
 
+/* ═══ סליידר ═══ */
+[data-testid="stSlider"] > div > div > div {{
+    background: linear-gradient(90deg, {c['grad_start']}, {c['grad_end']}) !important;
+}}
+
+/* ═══ דאטה פריים ═══ */
 [data-testid="stDataFrame"] {{
     border: 1px solid {c['border']} !important;
-    border-radius: 8px !important;
+    border-radius: 12px !important;
     overflow: hidden !important;
+    box-shadow: 0 4px 16px rgba(0,0,0,0.15) !important;
 }}
 
+/* ═══ חוצה ═══ */
 hr {{
-    border-color: {c['border']} !important;
-    margin: 12px 0 !important;
+    border: none !important;
+    height: 1px !important;
+    background: linear-gradient(90deg, transparent, {c['border2']}, transparent) !important;
+    margin: 14px 0 !important;
 }}
 
+/* ═══ אלרט ═══ */
 .stAlert {{
-    background-color: {c['card']} !important;
+    background: {c['card']} !important;
     border: 1px solid {c['border']} !important;
-    border-radius: 8px !important;
+    border-right: 3px solid {c['warning']} !important;
+    border-radius: 10px !important;
+    font-family: 'Inter', sans-serif !important;
 }}
 
+/* ═══ JSON ═══ */
 .stJson {{
-    background-color: {c['card']} !important;
-    border-radius: 8px !important;
+    background: {c['card']} !important;
     border: 1px solid {c['border']} !important;
+    border-radius: 10px !important;
+    font-family: 'JetBrains Mono', monospace !important;
+    font-size: 0.8rem !important;
 }}
 
-::-webkit-scrollbar {{ width: 6px; }}
+/* ═══ סקרולבר ═══ */
+::-webkit-scrollbar {{ width: 5px; height: 5px; }}
 ::-webkit-scrollbar-track {{ background: {c['bg']}; }}
-::-webkit-scrollbar-thumb {{ background: {c['border']}; border-radius: 3px; }}
+::-webkit-scrollbar-thumb {{ background: {c['border2']}; border-radius: 4px; }}
+::-webkit-scrollbar-thumb:hover {{ background: {c['accent']}; }}
 
-/* כרטיס סטטוס */
+/* ═══ כרטיס סטטוס ═══ */
 .status-card {{
-    background: {c['card']};
+    background: {card_bg};
+    border: 1px solid {c['border']};
+    border-radius: 14px;
+    padding: 16px 18px;
+    margin: 8px 0;
+    box-shadow: 0 4px 16px rgba(0,0,0,0.2);
+}}
+
+/* ═══ תגיות ═══ */
+.badge-online {{
+    display: inline-flex; align-items: center; gap: 5px;
+    background: rgba(16,185,129,0.12); color: #10B981;
+    border: 1px solid rgba(16,185,129,0.3);
+    padding: 3px 12px; border-radius: 999px;
+    font-size: .72rem; font-weight: 700; letter-spacing: 0.5px;
+}}
+.badge-online::before {{
+    content: "●";
+    animation: live-pulse 1.5s ease-in-out infinite;
+}}
+.badge-offline {{
+    display: inline-flex; align-items: center; gap: 5px;
+    background: rgba(244,63,94,0.12); color: #F43F5E;
+    border: 1px solid rgba(244,63,94,0.3);
+    padding: 3px 12px; border-radius: 999px;
+    font-size: .72rem; font-weight: 700;
+}}
+.badge-offline::before {{ content: "○"; }}
+
+/* ═══ אנימציות ═══ */
+@keyframes live-pulse {{
+    0%, 100% {{ opacity: 1; }}
+    50% {{ opacity: 0.3; }}
+}}
+@keyframes gradient-shift {{
+    0%   {{ background-position: 0% 50%; }}
+    50%  {{ background-position: 100% 50%; }}
+    100% {{ background-position: 0% 50%; }}
+}}
+@keyframes fade-up {{
+    from {{ opacity: 0; transform: translateY(8px); }}
+    to   {{ opacity: 1; transform: translateY(0); }}
+}}
+
+/* ═══ כותרת עמוד ═══ */
+.page-header {{
+    animation: fade-up 0.35s ease;
+    margin-bottom: 24px;
+    padding-bottom: 16px;
+    border-bottom: 1px solid {c['border']};
+}}
+.page-header h2 {{
+    font-size: 1.6rem !important;
+    font-family: 'Space Grotesk', sans-serif !important;
+    font-weight: 800 !important;
+    background: linear-gradient(135deg, {c['grad_start']}, {c['grad_end']});
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    margin-bottom: 4px !important;
+}}
+.page-header p {{
+    color: {c['text_dim']};
+    font-size: .85rem;
+    margin: 0;
+    font-family: 'Inter', sans-serif;
+}}
+
+/* ═══ KPI בר ═══ */
+.kpi-bar {{
+    background: {card_bg};
     border: 1px solid {c['border']};
     border-radius: 12px;
-    padding: 14px 16px;
-    margin: 6px 0;
+    padding: 12px 20px;
+    margin-bottom: 20px;
+    display: flex;
+    gap: 24px;
+    flex-wrap: wrap;
+    font-family: 'JetBrains Mono', monospace;
+}}
+.kpi-item-label {{ color: {c['text_dim']}; font-size: .72rem; font-weight: 500; text-transform: uppercase; letter-spacing: 0.8px; }}
+.kpi-item-value {{ color: {c['text_bright']}; font-size: .9rem; font-weight: 700; }}
+
+/* ═══ לוגו סיידבר ═══ */
+.sidebar-logo {{
+    background: linear-gradient(135deg, {c['grad_start']}22, {c['grad_end']}22);
+    border: 1px solid {c['border2']};
+    border-radius: 16px;
+    padding: 16px;
+    text-align: center;
+    margin-bottom: 8px;
+}}
+.sidebar-logo-title {{
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 1.4rem;
+    font-weight: 800;
+    background: linear-gradient(135deg, {c['grad_start']}, {c['grad_end']});
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    letter-spacing: -0.5px;
+}}
+.sidebar-logo-sub {{
+    font-size: .68rem;
+    color: {c['text_dim']};
+    margin-top: 2px;
+    letter-spacing: 1px;
+    text-transform: uppercase;
 }}
 
-/* תג מצב */
-.badge-online  {{ background: rgba(34,197,94,0.15);  color: #22c55e; border: 1px solid #22c55e44; padding: 3px 10px; border-radius: 999px; font-size: .75rem; font-weight: 600; }}
-.badge-offline {{ background: rgba(239,68,68,0.15);  color: #ef4444; border: 1px solid #ef444444; padding: 3px 10px; border-radius: 999px; font-size: .75rem; font-weight: 600; }}
-.badge-blitz   {{ background: rgba(245,158,11,0.15); color: #f59e0b; border: 1px solid #f59e0b44; padding: 3px 10px; border-radius: 999px; font-size: .75rem; font-weight: 600; }}
+/* ═══ רדיו ניווט ═══ */
+[data-testid="stRadio"] label {{
+    font-family: 'Inter', sans-serif !important;
+    font-size: 0.9rem !important;
+    font-weight: 500 !important;
+    padding: 6px 10px !important;
+    border-radius: 8px !important;
+    transition: background 0.15s !important;
+}}
+[data-testid="stRadio"] label:hover {{
+    background: {c['border']}44 !important;
+}}
 </style>
 """, unsafe_allow_html=True)
 
@@ -297,42 +470,52 @@ def set_strategy_enabled(name: str, enabled: bool) -> None:
 
 # ── עוזרי ממשק ──────────────────────────────────────────────────────────────
 def page_header(title: str, subtitle: str = ""):
-    c = T()
     st.markdown(
-        f"<div style='margin-bottom:20px'>"
-        f"<h2 style='margin:0;font-size:1.5rem'>{title}</h2>"
-        + (f"<p style='color:{c['text_dim']};margin:4px 0 0;font-size:.85rem'>{subtitle}</p>" if subtitle else "")
+        f"<div class='page-header'><h2>{title}</h2>"
+        + (f"<p>{subtitle}</p>" if subtitle else "")
         + "</div>",
         unsafe_allow_html=True,
     )
 
 
 def kpi_bar(pairs: list[tuple[str, str]]):
-    c = T()
-    cells = "  ·  ".join(
-        f"<span style='color:{c['text_dim']};font-size:.8rem'>{k}:</span> "
-        f"<span style='color:{c['text_bright']};font-weight:600;font-size:.85rem'>{v}</span>"
+    items = "".join(
+        f"<div style='display:flex;flex-direction:column;gap:2px'>"
+        f"<span class='kpi-item-label'>{k}</span>"
+        f"<span class='kpi-item-value'>{v}</span></div>"
         for k, v in pairs
     )
-    st.markdown(
-        f"<div style='background:{c['card']};border:1px solid {c['border']};"
-        f"border-radius:8px;padding:10px 16px;margin-bottom:16px'>{cells}</div>",
-        unsafe_allow_html=True,
-    )
+    st.markdown(f"<div class='kpi-bar'>{items}</div>", unsafe_allow_html=True)
 
 
 def _fig(fig: go.Figure, title: str, h: int = 350) -> go.Figure:
     c = T()
     fig.update_layout(
-        title=dict(text=title, font=dict(family="Inter,sans-serif", size=14, color=c["text_dim"])),
+        title=dict(
+            text=title,
+            font=dict(family="Space Grotesk, sans-serif", size=13, color=c["text_dim"]),
+            x=0, xanchor="left", pad=dict(l=4),
+        ),
         template=c["plotly_tpl"],
         height=h,
         paper_bgcolor=c["plot_paper"],
         plot_bgcolor=c["plot_bg"],
-        font=dict(family="Inter,sans-serif", color=c["text"]),
-        xaxis=dict(gridcolor=rgba(c["border"], 0.3), linecolor=rgba(c["border"], 0.5)),
-        yaxis=dict(gridcolor=rgba(c["border"], 0.3), linecolor=rgba(c["border"], 0.5)),
-        margin=dict(l=40, r=20, t=45, b=40),
+        font=dict(family="JetBrains Mono, monospace", size=11, color=c["text"]),
+        xaxis=dict(
+            gridcolor=rgba(c["border2"], 0.4),
+            linecolor=rgba(c["border2"], 0.6),
+            tickfont=dict(size=10),
+        ),
+        yaxis=dict(
+            gridcolor=rgba(c["border2"], 0.4),
+            linecolor=rgba(c["border2"], 0.6),
+            tickfont=dict(size=10),
+        ),
+        margin=dict(l=44, r=16, t=40, b=36),
+        legend=dict(
+            bgcolor="rgba(0,0,0,0)",
+            font=dict(size=10),
+        ),
     )
     return fig
 
@@ -341,15 +524,14 @@ def _fig(fig: go.Figure, title: str, h: int = 350) -> go.Figure:
 def render_sidebar():
     c = T()
     with st.sidebar:
-        # לוגו + כותרת
+        # לוגו
         st.markdown(
-            f"<div style='text-align:center;padding:16px 0 8px'>"
-            f"<div style='font-size:1.6rem;font-weight:800;color:{c['text_bright']}'>QueryKeys</div>"
-            f"<div style='font-size:.75rem;color:{c['text_dim']};margin-top:2px'>לוח בקרה מסחרי · v1.0</div>"
-            f"</div>",
+            "<div class='sidebar-logo'>"
+            "<div class='sidebar-logo-title'>⬡ QueryKeys</div>"
+            "<div class='sidebar-logo-sub'>Polymarket Intelligence · v1.0</div>"
+            "</div>",
             unsafe_allow_html=True,
         )
-        st.divider()
 
         # מצב תצוגה
         ca, cb = st.columns(2)
