@@ -209,7 +209,15 @@ class AIStrategyBuilder:
 
         strategy = self._parse_and_validate(raw, context)
         if not strategy:
-            return None
+            # Retry once, feeding the last validation error back to the model
+            last_error = getattr(self, "_last_validation_error", "unknown validation error")
+            log.warning("ai_builder.retrying_after_error", error=last_error)
+            raw = await self._call_claude(context, fix_error=last_error)
+            if not raw:
+                return None
+            strategy = self._parse_and_validate(raw, context)
+            if not strategy:
+                return None
 
         self._save_strategy_file(strategy)
         self._register_in_yaml(strategy)
@@ -239,16 +247,31 @@ class AIStrategyBuilder:
     # Claude call
     # ------------------------------------------------------------------
 
-    async def _call_claude(self, context: MarketContext) -> Optional[str]:
+    async def _call_claude(
+        self, context: MarketContext, fix_error: Optional[str] = None
+    ) -> Optional[str]:
+        messages = [
+            {"role": "system", "content": _SYSTEM_PROMPT},
+            {"role": "user", "content": _build_user_prompt(context)},
+        ]
+        if fix_error:
+            messages.append({
+                "role": "assistant",
+                "content": "(previous attempt had an error — regenerating)",
+            })
+            messages.append({
+                "role": "user",
+                "content": (
+                    f"Your previous response had this error: {fix_error}\n"
+                    "Please output the corrected JSON only, with valid Python in the 'code' field."
+                ),
+            })
         for attempt in range(3):
             try:
                 response = await self._client.chat.completions.create(
                     model=self._model,
                     max_tokens=2048,
-                    messages=[
-                        {"role": "system", "content": _SYSTEM_PROMPT},
-                        {"role": "user", "content": _build_user_prompt(context)},
-                    ],
+                    messages=messages,
                 )
                 return response.choices[0].message.content
             except groq.RateLimitError:
@@ -273,12 +296,14 @@ class AIStrategyBuilder:
         try:
             data = json.loads(raw)
         except json.JSONDecodeError as exc:
+            self._last_validation_error = f"JSON parse error: {exc}"
             log.error("ai_builder.json_parse_failed", error=str(exc), preview=raw[:200])
             return None
 
         required = {"name", "description", "rationale", "expected_edge_range", "params", "code"}
         missing = required - data.keys()
         if missing:
+            self._last_validation_error = f"Missing required fields: {list(missing)}"
             log.error("ai_builder.missing_fields", missing=list(missing))
             return None
 
@@ -289,6 +314,7 @@ class AIStrategyBuilder:
         try:
             tree = ast.parse(code)
         except SyntaxError as exc:
+            self._last_validation_error = f"SyntaxError in generated code: {exc}"
             log.error("ai_builder.syntax_error", name=name, error=str(exc))
             return None
 
@@ -303,6 +329,7 @@ class AIStrategyBuilder:
             for cls in class_nodes
         )
         if not valid_class:
+            self._last_validation_error = "Class does not extend BaseStrategy from src.strategies.base"
             log.error("ai_builder.no_base_strategy_class", name=name)
             return None
 
