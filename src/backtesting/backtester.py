@@ -35,6 +35,7 @@ from src.core.logging import get_logger
 from src.features.engineer import FeatureEngineer
 from src.prediction.edge_detector import EdgeDetector
 from src.prediction.ensemble import EnsemblePrediction
+from src.strategies.loader import StrategyRegistry
 from src.trading.kelly import KellyCriterion
 from src.trading.risk_manager import RiskManager
 
@@ -88,6 +89,8 @@ class Backtester:
         self._mc_sim = MonteCarloSimulator(
             n_runs=settings.backtesting.monte_carlo_runs
         )
+        self._strategies = StrategyRegistry()
+        self._strategies.load()
 
     async def run(
         self,
@@ -273,13 +276,40 @@ class Backtester:
                 p_win = 1 - model_prob
                 edge = abs(edge)
 
-            # Kelly sizing
+            # Build signal dict for strategy evaluation (same shape as live trading)
+            signal = {
+                "condition_id": cid,
+                "side": side,
+                "edge": edge,
+                "net_edge": edge - 0.005,  # spread cost deducted
+                "confidence": float(entry_snap.get("sentiment_confidence", 0.6)),
+                "uncertainty": float(entry_snap.get("uncertainty", 0.10)),
+                "model_prob": model_prob,
+                "market_price": yes_price,
+                "kelly_fraction": self._settings.risk.kelly_fraction,
+                "category": category,
+                "dte_days": dte,
+                "volume_24h": float(entry_snap.get("volume_24h", 0)),
+                "liquidity": float(entry_snap.get("liquidity", 0)),
+            }
+
+            # Strategy gate — skip if no strategy approves this signal
+            if not self._strategies.should_any_trade(signal):
+                continue
+
+            # Kelly sizing (strategy size_override takes precedence)
             b = (1 - entry_price) / max(entry_price, 0.01)
             q = 1 - p_win
             kelly_raw = max(0.0, (p_win * b - q) / max(b, 0.01))
             kelly = kelly_raw * self._settings.risk.kelly_fraction
             kelly = min(kelly, self._settings.risk.max_single_market)
-            bet_size = capital * kelly
+
+            strategy_size = self._strategies.get_size_override(signal, capital)
+            if strategy_size is not None:
+                bet_size = strategy_size
+            else:
+                bet_size = capital * kelly
+
             bet_size = min(
                 max(bet_size, self._settings.execution.min_order_size),
                 self._settings.execution.max_order_size,
