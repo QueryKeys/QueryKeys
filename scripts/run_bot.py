@@ -13,9 +13,11 @@ from __future__ import annotations
 
 import argparse
 import asyncio
+import json
 import os
 import signal
 import sys
+import time
 from pathlib import Path
 
 # Ensure project root (the directory containing src/) is on sys.path,
@@ -129,9 +131,32 @@ async def main() -> None:
     for sig in (signal.SIGTERM, signal.SIGINT):
         loop.add_signal_handler(sig, _handle_signal)
 
+    # Heartbeat writer — updates data/bot_heartbeat.json every 10s
+    _start_ts = time.time()
+    _hb_path = Path(settings.system.data_dir) / "bot_heartbeat.json"
+
+    async def _write_heartbeat():
+        while not stop_event.is_set():
+            try:
+                stats = trader.get_stats() if hasattr(trader, "get_stats") else {}
+                _hb_path.write_text(json.dumps({
+                    "timestamp": time.time(),
+                    "mode": settings.system.mode,
+                    "uptime_secs": int(time.time() - _start_ts),
+                    "trades_today": stats.get("trades_today", 0),
+                    "open_positions": stats.get("open_positions", 0),
+                    "last_scan": stats.get("last_scan", ""),
+                }))
+            except Exception:
+                pass
+            await asyncio.sleep(10)
+
+    hb_task = asyncio.create_task(_write_heartbeat())
+
     # Run bot until stop signal
     bot_task = asyncio.create_task(trader.run())
     await stop_event.wait()
+    hb_task.cancel()
     bot_task.cancel()
     try:
         await bot_task
@@ -144,6 +169,7 @@ async def main() -> None:
     await data_api.close()
     await sentiment.close()
     await db.close()
+    _hb_path.write_text(json.dumps({"timestamp": 0, "mode": "offline"}))
     log.info("querykeys.shutdown_complete")
 
 

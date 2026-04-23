@@ -43,6 +43,22 @@ strategies:
       max_position_pct: 0.05
     markets: "all"
 
+  - name: "weekly_cycle"
+    enabled: true
+    class: "src.strategies.weekly_cycle.WeeklyCycleStrategy"
+    params:
+      min_net_edge: 0.04          # slightly higher bar than ensemble_edge
+      min_confidence: 0.58
+      max_uncertainty: 0.12
+      min_dte: 1
+      max_dte: 7                  # only weekly-resolution markets
+      min_volume_24h: 3000        # skip illiquid markets
+      allowed_weekdays: [0,1,2,3,4]   # Mon–Fri only
+      avoid_utc_hours: [0,1,2,3,4,5]  # skip dead-liquidity window
+      base_position_pct: 0.05
+      max_position_pct: 0.09
+    markets: "all"
+
   - name: "late_resolution_convergence"
     enabled: true
     class: "src.strategies.late_resolution_convergence.LateResolutionConvergenceStrategy"

@@ -9,9 +9,12 @@ from __future__ import annotations
 import json
 import os
 import time
-from datetime import datetime
+from datetime import datetime, timezone
 from pathlib import Path
 from typing import Dict, Optional
+
+HEARTBEAT_FILE = Path("data/bot_heartbeat.json")
+HEARTBEAT_STALE_SECS = 30   # bot is considered dead if no update in 30s
 
 import numpy as np
 import pandas as pd
@@ -284,6 +287,29 @@ def qdf(sql: str, params: Optional[Dict] = None) -> pd.DataFrame:
         return pd.DataFrame()
 
 
+def bot_status() -> dict:
+    """Read bot heartbeat file. Returns status dict."""
+    if not HEARTBEAT_FILE.exists():
+        return {"running": False, "reason": "no heartbeat file"}
+    try:
+        data = json.loads(HEARTBEAT_FILE.read_text())
+        ts = data.get("timestamp", 0)
+        age = time.time() - ts
+        running = age < HEARTBEAT_STALE_SECS
+        return {
+            "running": running,
+            "age_secs": round(age),
+            "mode": data.get("mode", "unknown"),
+            "uptime": data.get("uptime_secs", 0),
+            "trades_today": data.get("trades_today", 0),
+            "open_positions": data.get("open_positions", 0),
+            "last_scan": data.get("last_scan", "—"),
+            "reason": "stale" if not running else "ok",
+        }
+    except Exception:
+        return {"running": False, "reason": "parse error"}
+
+
 # ── UI helpers ───────────────────────────────────────────────────────────────
 def term_header(title: str, level: int = 1):
     c = T()
@@ -373,13 +399,26 @@ def render_sidebar():
 
         st.markdown(f"<hr style='border-color:{c['border']}44;margin:6px 0'>", unsafe_allow_html=True)
 
-        # bot mode
-        mode = os.getenv("BOT_MODE", "paper")
-        dot_col = "#00ff41" if mode == "live" else "#ffaa00"
+        # bot status
+        bs = bot_status()
+        running = bs["running"]
+        dot_col  = c["accent"] if running else c["danger"]
+        dot_anim = "animation:pulse-glow 1s ease-in-out infinite;" if running else ""
+        status_label = "ONLINE" if running else "OFFLINE"
+        mode = bs.get("mode", os.getenv("BOT_MODE", "paper")).upper()
         st.markdown(
-            f"<div style='font-size:.85rem;padding:4px 2px'>"
-            f"<span style='color:{dot_col};text-shadow:0 0 8px {dot_col}'>●</span>"
-            f"  MODE: <b style='color:{c['text_bright']}'>{mode.upper()}</b></div>",
+            f"<div style='background:{c['card']};border:1px solid {dot_col}55;"
+            f"border-radius:4px;padding:8px 10px;margin:4px 0'>"
+            f"<div style='font-size:.9rem;font-weight:bold;letter-spacing:2px;"
+            f"color:{dot_col};text-shadow:0 0 8px {dot_col};{dot_anim}'>"
+            f"● BOT: {status_label}</div>"
+            f"<div style='font-size:.70rem;color:{c['text_dim']};margin-top:4px;line-height:1.7'>"
+            f"MODE&nbsp;&nbsp;&nbsp;: {mode}<br>"
+            f"UPTIME : {int(bs.get('uptime',0)//3600):02d}h {int((bs.get('uptime',0)%3600)//60):02d}m<br>"
+            f"TRADES : {bs.get('trades_today',0)} today<br>"
+            f"POS&nbsp;&nbsp;&nbsp;&nbsp;: {bs.get('open_positions',0)} open<br>"
+            f"LAST&nbsp;&nbsp;&nbsp;: {str(bs.get('last_scan','—'))[:19]}"
+            f"</div></div>",
             unsafe_allow_html=True,
         )
         st.markdown(
