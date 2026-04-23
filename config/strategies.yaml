@@ -43,6 +43,20 @@ strategies:
       max_position_pct: 0.05
     markets: "all"
 
+  - name: "high_conviction_blitz"
+    enabled: true
+    class: "src.strategies.high_conviction_blitz.HighConvictionBlitzStrategy"
+    params:
+      min_net_edge: 0.12          # only signals with 12%+ edge
+      min_confidence: 0.75        # high model agreement
+      max_uncertainty: 0.08       # models must agree tightly
+      min_volume_24h: 10000       # liquid markets only
+      max_dte: 14                 # short duration
+      min_price_gap: 0.10         # model vs market gap >= 10%
+      kelly_fraction: 0.75        # 75% Kelly — aggressive
+      max_position_pct: 0.25      # max 25% per trade
+    markets: "all"
+
   - name: "weekly_cycle"
     enabled: true
     class: "src.strategies.weekly_cycle.WeeklyCycleStrategy"
