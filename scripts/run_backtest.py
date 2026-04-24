@@ -59,14 +59,10 @@ def generate_synthetic_data(n: int = 500) -> list:
     for i in range(n):
         entry_dt = base_date + timedelta(days=random.randint(0, 300))
         dte = random.randint(3, 60)
-        exit_dt = entry_dt + timedelta(days=dte)
-        # True probability: biased toward 0.5 (market is efficient on average)
         true_prob = np.clip(np.random.normal(0.5, 0.2), 0.05, 0.95)
         outcome = 1.0 if random.random() < true_prob else 0.0
-        # Market price: true prob + noise (our edge source)
         noise = np.random.normal(0, 0.05)
         yes_price = float(np.clip(true_prob + noise, 0.05, 0.95))
-        # Sentiment: correlated with true_prob
         sentiment = float(np.clip((true_prob - 0.5) * 2 + np.random.normal(0, 0.3), -1, 1))
 
         data.append({
@@ -82,6 +78,30 @@ def generate_synthetic_data(n: int = 500) -> list:
             "outcome": outcome,
             "sentiment_score": sentiment,
             "price_momentum": float(np.random.normal(0, 0.1)),
+        })
+
+    # שווקי BTC 5 דקות סינתטיים — לבדיקת האסטרטגיה
+    for j in range(50):
+        entry_dt = base_date + timedelta(days=random.randint(0, 300),
+                                         minutes=random.randint(0, 1440))
+        true_prob = np.clip(np.random.normal(0.5, 0.15), 0.1, 0.9)
+        outcome = 1.0 if random.random() < true_prob else 0.0
+        yes_price = float(np.clip(true_prob + np.random.normal(0, 0.04), 0.05, 0.95))
+
+        data.append({
+            "condition_id": f"btc_5m_{j:03d}",
+            "timestamp": entry_dt.isoformat(),
+            "question": f"Will BTC go UP in the next 5 minutes? ({j})",
+            "category": "Crypto",
+            "yes_price": yes_price,
+            "volume_24h": random.uniform(15000, 200000),
+            "liquidity": random.uniform(5000, 50000),
+            "dte_days": round(5 / 60 / 24, 4),   # 5 דקות
+            "resolved": True,
+            "outcome": outcome,
+            "sentiment_score": float(np.random.normal(0, 0.2)),
+            "price_momentum": float(np.random.normal(0, 0.05)),
+            "market_slug": f"btc-updown-5m-{j}",
         })
 
     return data

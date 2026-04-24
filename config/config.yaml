@@ -32,7 +32,7 @@ websocket:
 scanner:
   min_volume_24h: 5000        # USD
   min_liquidity: 2000         # USD
-  min_days_to_expiry: 1
+  min_days_to_expiry: 0           # 0 = מאפשר שווקי BTC 5 דקות
   max_days_to_expiry: 90
   max_markets: 100
   categories:

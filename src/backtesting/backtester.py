@@ -281,7 +281,7 @@ class Backtester:
                 "condition_id": cid,
                 "side": side,
                 "edge": edge,
-                "net_edge": edge - 0.005,  # spread cost deducted
+                "net_edge": edge - 0.005,
                 "confidence": float(entry_snap.get("sentiment_confidence", 0.6)),
                 "uncertainty": float(entry_snap.get("uncertainty", 0.10)),
                 "model_prob": model_prob,
@@ -291,6 +291,8 @@ class Backtester:
                 "dte_days": dte,
                 "volume_24h": float(entry_snap.get("volume_24h", 0)),
                 "liquidity": float(entry_snap.get("liquidity", 0)),
+                "question": str(entry_snap.get("question", "")),
+                "market_slug": str(entry_snap.get("market_slug", "")),
             }
 
             # Strategy gate — skip if no strategy approves this signal

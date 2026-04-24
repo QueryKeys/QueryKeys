@@ -155,11 +155,26 @@ class Btc5mStrategy(BaseStrategy):
 
     def _is_btc_5m_market(self, signal: Dict) -> bool:
         question = str(signal.get("question", "")).lower()
-        cid = str(signal.get("condition_id", "")).lower()
+        cid      = str(signal.get("condition_id", "")).lower()
+        slug     = str(signal.get("market_slug", "")).lower()
+        category = str(signal.get("category", "")).lower()
+        dte      = float(signal.get("dte_days", 999))
+
+        # התאמה לפי שאלה מלאה
         btc_kw  = any(k in question for k in ["btc", "bitcoin"])
         time_kw = any(k in question for k in ["5m", "5 min", "5-min", "five min"])
-        # Also match by condition_id prefix if question not available
-        return (btc_kw and time_kw) or "btc" in cid
+        if btc_kw and time_kw:
+            return True
+
+        # התאמה לפי condition_id או slug
+        if any(k in cid + slug for k in ["btc", "bitcoin", "xbt"]):
+            return True
+
+        # fallback: שוק קריפטו עם DTE קצר מאוד (< 1 שעה) = כנראה שוק 5 דקות
+        if category == "crypto" and dte < (1 / 24):
+            return True
+
+        return False
 
     def should_trade(self, signal: Dict) -> bool:
         # Only BTC 5-minute markets
