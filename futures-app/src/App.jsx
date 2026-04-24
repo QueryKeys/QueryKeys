@@ -33,6 +33,13 @@ import TradeLog      from './components/TradeLog.jsx';
 export default function App() {
   const { startSim, pauseSim, sim, enterTrade, flattenAll } = useStore();
 
+  // ── Auto-start the simulation once on mount ──────────────────────────────
+  useEffect(() => {
+    // Kick off the sim loop so the user sees bars appear immediately.
+    if (!sim.running) startSim();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   // ── Global hotkeys ─────────────────────────────────────────────────────
   useEffect(() => {
     const handler = (e) => {

@@ -93,11 +93,10 @@ export default function MainChart() {
     const rsiLine = rsiChart.addLineSeries({ color: CHART_COLORS.rsi, lineWidth: 1, title: 'RSI(14)' });
     rsiLineRef.current = rsiLine;
 
-    // RSI 40/60 reference lines
-    rsiChart.addLineSeries({ color: '#555', lineWidth: 1, lineStyle: LineStyle.Dashed, title: '60' })
-      .setData([{ time: 0, value: 60 }]); // placeholder; will be reset each data load
-    rsiChart.addLineSeries({ color: '#555', lineWidth: 1, lineStyle: LineStyle.Dashed, title: '40' })
-      .setData([{ time: 0, value: 40 }]);
+    // RSI 40/60 reference lines (price lines on the RSI series — always visible)
+    rsiLine.createPriceLine({ price: 60, color: '#555', lineWidth: 1, lineStyle: LineStyle.Dashed, title: '60' });
+    rsiLine.createPriceLine({ price: 40, color: '#555', lineWidth: 1, lineStyle: LineStyle.Dashed, title: '40' });
+    rsiLine.createPriceLine({ price: 50, color: '#333', lineWidth: 1, lineStyle: LineStyle.Dotted, title: '' });
 
     // Sync time scales
     chart.timeScale().subscribeVisibleLogicalRangeChange(range => {

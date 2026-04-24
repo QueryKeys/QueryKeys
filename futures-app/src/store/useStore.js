@@ -21,7 +21,7 @@ import { computeVwapSeries, currentVwap } from '../indicators/vwap.js';
 import { currentRsi, computeRsiSeries }  from '../indicators/rsi.js';
 import { RiskManager }  from '../trading/RiskManager.js';
 import { OrderManager } from '../trading/OrderManager.js';
-import { SESSION_TIMES, DEFAULT_SETTINGS, ACCOUNT_PARAMS } from '../constants.js';
+import { SESSION_TIMES, DEFAULT_SETTINGS, ACCOUNT_PARAMS, NQ_SPECS } from '../constants.js';
 
 // ── Singleton simulation objects (not reactive; live outside Zustand) ─────────
 const priceSimulator   = new PriceSimulator();
